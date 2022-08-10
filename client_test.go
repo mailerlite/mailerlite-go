@@ -3,10 +3,12 @@ package mailerlite_test
 import (
 	"bytes"
 	"context"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/mailerlite/mailerlite-go"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +24,7 @@ func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 	return f(req), nil
 }
 
-//NewTestClient returns *http.Client with Transport replaced to avoid making real calls
+// NewTestClient returns *http.Client with Transport replaced to avoid making real calls
 func NewTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
 		Transport: fn,
@@ -83,9 +85,6 @@ func TestWillHandleError(t *testing.T) {
 	listOptions := &mailerlite.ListSubscriberOptions{}
 
 	_, _, err := client.Subscriber.List(ctx, listOptions)
-	if err != nil {
-		return
-	}
 
 	assert.Error(t, err)
 }
@@ -95,10 +94,10 @@ func TestWillHandleAPIError(t *testing.T) {
 
 	testClient := NewTestClient(func(req *http.Request) *http.Response {
 		return &http.Response{
-			StatusCode: http.StatusBadRequest,
+			StatusCode: http.StatusUnprocessableEntity,
 			Request:    req,
-			Body: ioutil.NopCloser(strings.NewReader(`{"message":"The given data was invalid.",
-			"errors": [{"filter": "The filter must be an array."}]}`)),
+			Body: io.NopCloser(strings.NewReader(`{"message":"The given data was invalid.",
+			"errors": {"filter": ["The filter must be an array."]}}`)),
 		}
 	})
 
@@ -110,9 +109,14 @@ func TestWillHandleAPIError(t *testing.T) {
 
 	_, _, err := client.Subscriber.List(ctx, listOptions)
 
+	if err, ok := err.(*mailerlite.ErrorResponse); ok {
+		assert.Equal(t, "The given data was invalid.", err.Message)
+		assert.Equal(t, 1, len(err.Errors))
+	}
+
 	assert.Error(t, err)
 	assert.IsType(t, err, &mailerlite.ErrorResponse{})
-	assert.Equal(t, err.Error(), "GET https://connect.mailerlite.com/api/subscribers: 400 The given data was invalid.")
+	assert.Equal(t, err.Error(), "GET https://connect.mailerlite.com/api/subscribers: 422 The given data was invalid. map[filter:[The filter must be an array.]]")
 }
 
 func TestWillHandleAPIFilters(t *testing.T) {
@@ -122,7 +126,7 @@ func TestWillHandleAPIFilters(t *testing.T) {
 		return &http.Response{
 			StatusCode: http.StatusAccepted,
 			Request:    req,
-			Body: ioutil.NopCloser(strings.NewReader(`{
+			Body: io.NopCloser(strings.NewReader(`{
 				"data": [
 				  {
 					"id": "123456789",
@@ -193,7 +197,7 @@ func TestWillHandleAPIAuthError(t *testing.T) {
 		return &http.Response{
 			StatusCode: http.StatusUnauthorized,
 			Request:    req,
-			Body:       ioutil.NopCloser(strings.NewReader(`{"message": "Unauthenticated."}`)),
+			Body:       io.NopCloser(strings.NewReader(`{"message": "Unauthenticated."}`)),
 		}
 	})
 
@@ -209,5 +213,47 @@ func TestWillHandleAPIAuthError(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.IsType(t, err, &mailerlite.AuthError{})
-	assert.Equal(t, err.Error(), "GET https://connect.mailerlite.com/api/subscribers: 401 Unauthenticated.")
+	assert.Equal(t, err.Error(), "GET https://connect.mailerlite.com/api/subscribers: 401 Unauthenticated. map[]")
+}
+
+func TestWillHandleAPIRateError(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	header := http.Header{}
+	header.Set(mailerlite.HeaderRateLimit, "60")
+	header.Set(mailerlite.HeaderRateRemaining, "0")
+	header.Set(mailerlite.HeaderRateRetryAfter, "59")
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		res := &http.Response{
+			StatusCode: http.StatusTooManyRequests,
+			Request:    req,
+			Header:     header,
+			Body:       io.NopCloser(strings.NewReader(`{"message": "Too Many Attempts."}`)),
+		}
+
+		return res
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	listOptions := &mailerlite.ListSubscriberOptions{}
+
+	_, res, err := client.Subscriber.List(ctx, listOptions)
+
+	assert.Equal(t, http.StatusTooManyRequests, res.StatusCode)
+	assert.IsType(t, &mailerlite.RateLimitError{}, err)
+
+	retryAfter := time.Duration(59) * time.Second
+
+	if err, ok := err.(*mailerlite.RateLimitError); ok {
+		assert.Equal(t, "Too Many Attempts.", err.Message)
+		assert.Equal(t, 0, err.Rate.Remaining)
+		assert.Equal(t, &retryAfter, err.Rate.RetryAfter)
+	}
+
+	assert.Equal(t, "GET https://connect.mailerlite.com/api/subscribers: 429 Too Many Attempts. [retry after 59s]", err.Error())
+
 }

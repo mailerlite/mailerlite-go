@@ -5,21 +5,32 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/go-querystring/query"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
-
-	"github.com/google/go-querystring/query"
+	"strconv"
+	"sync"
+	"time"
 )
 
-const APIBase string = "https://connect.mailerlite.com/api"
+const (
+	APIBase string = "https://connect.mailerlite.com/api"
+
+	HeaderRateLimit      = "X-RateLimit-Limit"
+	HeaderRateRemaining  = "X-RateLimit-Remaining"
+	HeaderRateRetryAfter = "Retry-After"
+)
 
 // Client - base api client
 type Client struct {
 	apiBase string
 	apiKey  string
 	client  *http.Client
+
+	rateMu     sync.Mutex
+	rateLimits Rate // Rate limits for the client as determined by the most recent API calls.
 
 	common service // Reuse a single struct.
 
@@ -34,19 +45,35 @@ type service struct {
 // Response is a MailerLite API response. This wraps the standard http.Response
 type Response struct {
 	*http.Response
+
+	// Explicitly specify the Rate type so Rate's String() receiver doesn't
+	// propagate to Response.
+	Rate Rate
 }
 
 // ErrorResponse is a MailerLite API error response. This wraps the standard http.Response
 type ErrorResponse struct {
-	Response *http.Response // HTTP response that caused this error
-	Message  string         `json:"message"` // error message
-	Errors   interface{}    `json:"errors"`
+	Response *http.Response      // HTTP response that caused this error
+	Message  string              `json:"message"` // error message
+	Errors   map[string][]string `json:"errors"`
+}
+
+// Rate represents the rate limit for the current client.
+type Rate struct {
+	// The number of requests per minute the client is currently limited to.
+	Limit int `json:"limit"`
+
+	// The number of remaining requests the client can make this minute.
+	Remaining int `json:"remaining"`
+
+	// Retry After
+	RetryAfter *time.Duration `json:"retry"`
 }
 
 func (r *ErrorResponse) Error() string {
-	return fmt.Sprintf("%v %v: %d %v",
+	return fmt.Sprintf("%v %v: %d %v %+v",
 		r.Response.Request.Method, r.Response.Request.URL,
-		r.Response.StatusCode, r.Message)
+		r.Response.StatusCode, r.Message, r.Errors)
 }
 
 // AuthError occurs when using HTTP Authentication fails
@@ -150,6 +177,7 @@ func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*Res
 // r must not be nil.
 func newResponse(r *http.Response) *Response {
 	response := &Response{Response: r}
+	response.Rate = parseRate(r)
 	return response
 }
 
@@ -175,6 +203,12 @@ func checkResponse(r *http.Response) error {
 	switch {
 	case r.StatusCode == http.StatusUnauthorized:
 		return (*AuthError)(errorResponse)
+	case r.StatusCode == http.StatusTooManyRequests && r.Header.Get(HeaderRateRemaining) == "0":
+		return &RateLimitError{
+			Rate:     parseRate(r),
+			Response: errorResponse.Response,
+			Message:  errorResponse.Message,
+		}
 	default:
 		return errorResponse
 	}
@@ -224,6 +258,40 @@ func addOptions(s string, opt interface{}) (string, error) {
 	origURL.RawQuery = origValues.Encode()
 
 	return origURL.String(), nil
+}
+
+func parseRate(r *http.Response) Rate {
+	var rate Rate
+	if limit := r.Header.Get(HeaderRateLimit); limit != "" {
+		rate.Limit, _ = strconv.Atoi(limit)
+	}
+	if remaining := r.Header.Get(HeaderRateRemaining); remaining != "" {
+		rate.Remaining, _ = strconv.Atoi(remaining)
+	}
+
+	if retry := r.Header.Get(HeaderRateRetryAfter); retry != "" {
+		// The "Retry-After" header value will be
+		// an integer which represents the number of seconds that one should
+		// wait before resuming making requests.
+		retryAfterSeconds, _ := strconv.ParseInt(retry, 10, 64) // Error handling is noop.
+		retryAfter := time.Duration(retryAfterSeconds) * time.Second
+		rate.RetryAfter = &retryAfter
+	}
+	return rate
+}
+
+// RateLimitError occurs when MailerLite returns 403 Forbidden response with a rate limit
+// remaining value of 0.
+type RateLimitError struct {
+	Rate     Rate           // Rate specifies last known rate limit for the client
+	Response *http.Response // HTTP response that caused this error
+	Message  string         `json:"message"` // error message
+}
+
+func (r *RateLimitError) Error() string {
+	return fmt.Sprintf("%v %v: %d %v [retry after %v]",
+		r.Response.Request.Method, r.Response.Request.URL,
+		r.Response.StatusCode, r.Message, r.Rate.RetryAfter)
 }
 
 // Bool is a helper routine that allocates a new bool value

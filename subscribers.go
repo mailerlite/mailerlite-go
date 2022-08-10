@@ -136,7 +136,7 @@ func (s *SubscriberService) List(ctx context.Context, options *ListSubscriberOpt
 	return root, res, nil
 }
 
-// Get - get a single subscriber by email or ID
+// Count - get a count of subscribers
 func (s *SubscriberService) Count(ctx context.Context) (*count, *Response, error) {
 	path := fmt.Sprintf("%s?limit=0", subscriberEndpoint)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)

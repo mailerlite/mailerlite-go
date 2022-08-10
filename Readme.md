@@ -7,13 +7,13 @@ MailerLite Golang SDK
 # Table of Contents
 - [Installation](#installation)
 - [Usage](#usage)
-    - [Subscribers](#subscribers)
-        - [Get a list of subscribers](#get-a-list-of-subscribers)
-        - [Get a single subscriber](#get-a-single-subscriber)
-        - [Count all subscribers](#count-all-subscribers)
-        - [Create a subscriber](#create-a-subscriber)
-        - [Update a subscriber](#update-a-subscriber)
-        - [Delete a subscriber](#delete-a-subscriber)
+	- [Subscribers](#subscribers)
+		- [Get a list of subscribers](#get-a-list-of-subscribers)
+		- [Get a single subscriber](#get-a-single-subscriber)
+		- [Count all subscribers](#count-all-subscribers)
+		- [Create a subscriber](#create-a-subscriber)
+		- [Update a subscriber](#update-a-subscriber)
+		- [Delete a subscriber](#delete-a-subscriber)
 
 ## Subscribers
 
@@ -32,9 +32,9 @@ import (
 var APIToken = "Api Token Here"
 
 func main() {
-    client := mailerlite.NewClient(APIToken)
+	client := mailerlite.NewClient(APIToken)
 
-    ctx := context.TODO()
+	ctx := context.TODO()
 
 	listOptions := &mailerlite.ListSubscriberOptions{
 		Limit:  200,
@@ -42,7 +42,7 @@ func main() {
 		Filter: &mailerlite.Filter{Name: "status", Value: "active"},
 	}
 
-    subscribers, _, err := client.Subscriber.List(ctx, listOptions)
+	subscribers, _, err := client.Subscriber.List(ctx, listOptions)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,13 +66,13 @@ import (
 var APIToken = "Api Token Here"
 
 func main() {
-    client := mailerlite.NewClient(APIToken)
+	client := mailerlite.NewClient(APIToken)
 
-    ctx := context.TODO()
+	ctx := context.TODO()
 
 	getOptions := &mailerlite.GetSubscriberOptions{
 		ID: 123456789,
-        //Email: "client@example.com"
+		//Email: "client@example.com"
 	}
 
 	subscriber, _, err := client.Subscriber.Get(ctx, getOptions)
@@ -99,9 +99,9 @@ import (
 var APIToken = "Api Token Here"
 
 func main() {
-    client := mailerlite.NewClient(APIToken)
+	client := mailerlite.NewClient(APIToken)
 
-    ctx := context.TODO()
+	ctx := context.TODO()
 
 	count, _, err := client.Subscriber.Count(ctx)
 	if err != nil {
@@ -127,18 +127,18 @@ import (
 var APIToken = "Api Token Here"
 
 func main() {
-    client := mailerlite.NewClient(APIToken)
+	client := mailerlite.NewClient(APIToken)
 
-    ctx := context.TODO()
+	ctx := context.TODO()
 
-    subscriber := &mailerlite.Subscriber{
+	subscriber := &mailerlite.Subscriber{
 		Email: "example@example.com",
 		Fields: map[string]interface{}{
 			"city": "Vilnius",
 		},
 	}
 
-    newSubscriber, _, err := client.Subscriber.Create(ctx, subscriber)
+	newSubscriber, _, err := client.Subscriber.Create(ctx, subscriber)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -162,18 +162,18 @@ import (
 var APIToken = "Api Token Here"
 
 func main() {
-    client := mailerlite.NewClient(APIToken)
+	client := mailerlite.NewClient(APIToken)
 
-    ctx := context.TODO()
+	ctx := context.TODO()
 
-    subscriber := &mailerlite.Subscriber{
+	subscriber := &mailerlite.Subscriber{
 		Email: "example@example.com",
 		Fields: map[string]interface{}{
 			"company": "MailerLite",
 		},
 	}
 
-    newSubscriber, _, err := client.Subscriber.Create(ctx, subscriber)
+	newSubscriber, _, err := client.Subscriber.Create(ctx, subscriber)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -197,9 +197,9 @@ import (
 var APIToken = "Api Token Here"
 
 func main() {
-    client := mailerlite.NewClient(APIToken)
+	client := mailerlite.NewClient(APIToken)
 
-    ctx := context.TODO()
+	ctx := context.TODO()
 
 	_, _, err := client.Subscriber.Delete(ctx, "subscriber-id")
 	if err != nil {
