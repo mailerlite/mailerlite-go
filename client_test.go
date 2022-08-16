@@ -3,8 +3,8 @@ package mailerlite_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
@@ -48,10 +48,11 @@ func TestCanMakeMockApiCall(t *testing.T) {
 
 	testClient := NewTestClient(func(req *http.Request) *http.Response {
 		// Test request parameters
+		assert.Equal(t, req.Header.Get("user-agent"), fmt.Sprintf("go-mailerlite/%v", mailerlite.Version))
 		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers")
 		return &http.Response{
 			StatusCode: http.StatusAccepted,
-			Body:       ioutil.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 		}
 	})
 

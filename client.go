@@ -16,7 +16,10 @@ import (
 )
 
 const (
-	APIBase string = "https://connect.mailerlite.com/api"
+	Version = "0.0.1"
+
+	defaultBaseURL   = "https://connect.mailerlite.com/api"
+	defaultUserAgent = "go-mailerlite" + "/" + Version
 
 	HeaderRateLimit      = "X-RateLimit-Limit"
 	HeaderRateRemaining  = "X-RateLimit-Remaining"
@@ -25,17 +28,20 @@ const (
 
 // Client - base api client
 type Client struct {
-	apiBase string
-	apiKey  string
-	client  *http.Client
+	clientMu sync.Mutex   // clientMu protects the client during calls that modify the CheckRedirect func.
+	client   *http.Client // HTTP client used to communicate with the API.
 
-	rateMu     sync.Mutex
-	rateLimits Rate // Rate limits for the client as determined by the most recent API calls.
+	apiBase *url.URL // apiBase the base used when communicating with the API.
+	apiKey  string   // apiKey used when communicating with the API.
 
-	common service // Reuse a single struct.
+	userAgent string // userAgent User agent used when communicating with the API.
 
-	// Services
-	Subscriber *SubscriberService
+	rateMu     sync.Mutex // rateMu protects the rate during getting rate limits from client
+	rateLimits Rate       // Rate limits for the client as determined by the most recent API calls.
+
+	common service // common service
+
+	Subscriber *SubscriberService // Subscriber service
 }
 
 type service struct {
@@ -83,10 +89,13 @@ func (r *AuthError) Error() string { return (*ErrorResponse)(r).Error() }
 
 // NewClient - creates a new client instance.
 func NewClient(apiKey string) *Client {
+	baseURL, _ := url.Parse(defaultBaseURL)
+
 	client := &Client{
-		apiBase: APIBase,
-		apiKey:  apiKey,
-		client:  http.DefaultClient,
+		apiBase:   baseURL,
+		apiKey:    apiKey,
+		userAgent: defaultUserAgent,
+		client:    http.DefaultClient,
 	}
 
 	client.common.client = client
@@ -135,10 +144,13 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 		return nil, err
 	}
 
+	if c.userAgent != "" {
+		req.Header.Set("User-Agent", c.userAgent)
+	}
+
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer "+c.apiKey)
+	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "Mailerlite-Client-Golang-v1")
 
 	return req, nil
 }
