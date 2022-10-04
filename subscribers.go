@@ -13,21 +13,21 @@ type SubscriberService service
 
 // subscribers - subscribers response
 type rootSubscribers struct {
-	Data  []subscriberList `json:"data"`
-	Links Links            `json:"links"`
-	Meta  Meta             `json:"meta"`
+	Data  []Subscriber `json:"data"`
+	Links Links        `json:"links"`
+	Meta  Meta         `json:"meta"`
 }
 
 // subscribers - subscribers response
 type rootSubscriber struct {
-	Data subscriber `json:"data"`
+	Data Subscriber `json:"data"`
 }
 
 type count struct {
 	Total int `json:"total"`
 }
 
-type subscriber struct {
+type Subscriber struct {
 	ID             string                 `json:"id"`
 	Email          string                 `json:"email"`
 	Status         string                 `json:"status"`
@@ -46,27 +46,6 @@ type subscriber struct {
 	Groups         []groups               `json:"groups"`
 	OptedInAt      string                 `json:"opted_in_at"`
 	OptinIP        string                 `json:"optin_ip"`
-}
-
-type subscriberList struct {
-	ID             string        `json:"id"`
-	Email          string        `json:"email"`
-	Status         string        `json:"status"`
-	Source         string        `json:"source"`
-	Sent           int           `json:"sent"`
-	OpensCount     int           `json:"opens_count"`
-	ClicksCount    int           `json:"clicks_count"`
-	OpenRate       int           `json:"open_rate"`
-	ClickRate      int           `json:"click_rate"`
-	IPAddress      interface{}   `json:"ip_address"`
-	SubscribedAt   string        `json:"subscribed_at"`
-	UnsubscribedAt interface{}   `json:"unsubscribed_at"`
-	CreatedAt      string        `json:"created_at"`
-	UpdatedAt      string        `json:"updated_at"`
-	Fields         interface{}   `json:"fields"`
-	Groups         []interface{} `json:"groups"`
-	OptedInAt      string        `json:"opted_in_at"`
-	OptinIP        string        `json:"optin_ip"`
 }
 
 type groups struct {
@@ -89,18 +68,6 @@ type groups struct {
 	BouncedCount      int    `json:"bounced_count"`
 	JunkCount         int    `json:"junk_count"`
 	CreatedAt         string `json:"created_at"`
-}
-
-type Subscriber struct {
-	Email          string      `json:"email"`
-	Fields         interface{} `json:"fields,omitempty"`
-	Groups         []int       `json:"groups,omitempty"`
-	Status         string      `json:"status,omitempty"`
-	SubscribedAt   string      `json:"subscribed_at,omitempty"`
-	IPAddress      string      `json:"ip_address,omitempty"`
-	OptedInAt      string      `json:"opted_in_at,omitempty"`
-	OptinIP        string      `json:"optin_ip,omitempty"`
-	UnsubscribedAt string      `json:"unsubscribed_at,omitempty"`
 }
 
 type Fields struct {
