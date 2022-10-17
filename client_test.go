@@ -168,7 +168,7 @@ func TestWillHandleAPIFilters(t *testing.T) {
 					}
 				  ],
 				  "path": "https://connect.mailerlite.com/api/subscribers",
-				  "per_page": "1",
+				  "per_page": 1,
 				  "to": 1,
 				  "total": 2
 				}
