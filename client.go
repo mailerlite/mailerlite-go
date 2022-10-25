@@ -43,6 +43,8 @@ type Client struct {
 
 	Subscriber *SubscriberService // Subscriber service
 	Group      *GroupService      // Group service
+	Field      *FieldService      // Field service
+
 }
 
 type service struct {
@@ -102,6 +104,7 @@ func NewClient(apiKey string) *Client {
 	client.common.client = client
 	client.Subscriber = (*SubscriberService)(&client.common)
 	client.Group = (*GroupService)(&client.common)
+	client.Field = (*FieldService)(&client.common)
 
 	return client
 }

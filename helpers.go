@@ -3,6 +3,8 @@ package mailerlite
 var (
 	SortByName                = "name"
 	SortByNameDescending      = "-name"
+	SortByType                = "type"
+	SortByTypeDescending      = "-type"
 	SortByTotal               = "total"
 	SortByTotalDescending     = "-total"
 	SortByOpenRate            = "open_rate"
