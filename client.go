@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-querystring/query"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -42,6 +42,7 @@ type Client struct {
 	common service // common service
 
 	Subscriber *SubscriberService // Subscriber service
+	Group      *GroupService      // Group service
 }
 
 type service struct {
@@ -100,6 +101,7 @@ func NewClient(apiKey string) *Client {
 
 	client.common.client = client
 	client.Subscriber = (*SubscriberService)(&client.common)
+	client.Group = (*GroupService)(&client.common)
 
 	return client
 }
@@ -203,7 +205,7 @@ func checkResponse(r *http.Response) error {
 	}
 
 	errorResponse := &ErrorResponse{Response: r}
-	data, err := ioutil.ReadAll(r.Body)
+	data, err := io.ReadAll(r.Body)
 
 	if err == nil && len(data) > 0 {
 		err := json.Unmarshal(data, errorResponse)

@@ -43,31 +43,9 @@ type Subscriber struct {
 	CreatedAt      string                 `json:"created_at"`
 	UpdatedAt      string                 `json:"updated_at"`
 	Fields         map[string]interface{} `json:"fields"`
-	Groups         []groups               `json:"groups"`
+	Groups         []Group                `json:"groups"`
 	OptedInAt      string                 `json:"opted_in_at"`
 	OptinIP        string                 `json:"optin_ip"`
-}
-
-type groups struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	ActiveCount int    `json:"active_count"`
-	SentCount   int    `json:"sent_count"`
-	OpensCount  int    `json:"opens_count"`
-	OpenRate    struct {
-		Float  int    `json:"float"`
-		String string `json:"string"`
-	} `json:"open_rate"`
-	ClicksCount int `json:"clicks_count"`
-	ClickRate   struct {
-		Float  int    `json:"float"`
-		String string `json:"string"`
-	} `json:"click_rate"`
-	UnsubscribedCount int    `json:"unsubscribed_count"`
-	UnconfirmedCount  int    `json:"unconfirmed_count"`
-	BouncedCount      int    `json:"bounced_count"`
-	JunkCount         int    `json:"junk_count"`
-	CreatedAt         string `json:"created_at"`
 }
 
 type Fields struct {
