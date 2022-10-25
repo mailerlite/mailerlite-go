@@ -6,14 +6,15 @@ import (
 )
 
 type Meta struct {
-	CurrentPage int         `json:"current_page"`
-	From        int         `json:"from"`
-	LastPage    int         `json:"last_page"`
-	Links       []MetaLinks `json:"links"`
-	Path        string      `json:"path"`
-	PerPage     int         `json:"per_page"`
-	To          int         `json:"to"`
-	Total       int         `json:"total"`
+	CurrentPage  int         `json:"current_page"`
+	From         int         `json:"from"`
+	LastPage     int         `json:"last_page"`
+	Links        []MetaLinks `json:"links"`
+	Path         string      `json:"path"`
+	PerPage      int         `json:"per_page"`
+	To           int         `json:"to"`
+	Total        int         `json:"total"`
+	Aggregations interface{} `json:"aggregations"`
 }
 
 // Links manages links that are returned along with a List

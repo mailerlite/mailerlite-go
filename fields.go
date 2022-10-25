@@ -27,7 +27,7 @@ type Field struct {
 	Type string `json:"type"`
 }
 
-// ListFieldOptions - modifies the behavior of GroupService.List method
+// ListFieldOptions - modifies the behavior of FieldService.List method
 type ListFieldOptions struct {
 	Filter *Filter `json:"filter,omitempty"`
 	Page   int     `url:"page,omitempty"`
@@ -87,8 +87,8 @@ func (s *FieldService) Update(ctx context.Context, fieldID, fieldName string) (*
 	return root, res, nil
 }
 
-func (s *FieldService) Delete(ctx context.Context, id string) (*rootField, *Response, error) {
-	path := fmt.Sprintf("%s/%s", fieldEndpoint, id)
+func (s *FieldService) Delete(ctx context.Context, fieldID string) (*rootField, *Response, error) {
+	path := fmt.Sprintf("%s/%s", fieldEndpoint, fieldID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
 	if err != nil {

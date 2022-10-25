@@ -76,8 +76,8 @@ func (s *GroupService) List(ctx context.Context, options *ListGroupOptions) (*ro
 	return root, res, nil
 }
 
-func (s *GroupService) Create(ctx context.Context, name string) (*rootGroup, *Response, error) {
-	body := map[string]interface{}{"name": name}
+func (s *GroupService) Create(ctx context.Context, groupName string) (*rootGroup, *Response, error) {
+	body := map[string]interface{}{"name": groupName}
 	req, err := s.client.newRequest(http.MethodPost, groupEndpoint, body)
 	if err != nil {
 		return nil, nil, err
@@ -92,9 +92,9 @@ func (s *GroupService) Create(ctx context.Context, name string) (*rootGroup, *Re
 	return root, res, nil
 }
 
-func (s *GroupService) Update(ctx context.Context, id, name string) (*rootGroup, *Response, error) {
-	body := map[string]interface{}{"name": name}
-	path := fmt.Sprintf("%s/%s", groupEndpoint, id)
+func (s *GroupService) Update(ctx context.Context, groupID, groupName string) (*rootGroup, *Response, error) {
+	body := map[string]interface{}{"name": groupName}
+	path := fmt.Sprintf("%s/%s", groupEndpoint, groupID)
 
 	req, err := s.client.newRequest(http.MethodPut, path, body)
 	if err != nil {
@@ -110,8 +110,8 @@ func (s *GroupService) Update(ctx context.Context, id, name string) (*rootGroup,
 	return root, res, nil
 }
 
-func (s *GroupService) Delete(ctx context.Context, id string) (*rootGroup, *Response, error) {
-	path := fmt.Sprintf("%s/%s", groupEndpoint, id)
+func (s *GroupService) Delete(ctx context.Context, groupID string) (*rootGroup, *Response, error) {
+	path := fmt.Sprintf("%s/%s", groupEndpoint, groupID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
 	if err != nil {
@@ -127,6 +127,7 @@ func (s *GroupService) Delete(ctx context.Context, id string) (*rootGroup, *Resp
 	return root, res, nil
 }
 
+// TODO: is this required we could use subscribers endpoint to filter by groupID
 func (s *GroupService) Subscribers(ctx context.Context, options *ListGroupSubscriberOptions) (*rootSubscribers, *Response, error) {
 	path := fmt.Sprintf("%s/%s/subscribers", groupEndpoint, options.GroupID)
 
@@ -144,8 +145,8 @@ func (s *GroupService) Subscribers(ctx context.Context, options *ListGroupSubscr
 	return root, res, nil
 }
 
-func (s *GroupService) Assign(ctx context.Context, id, subscriberID string) (*rootGroup, *Response, error) {
-	path := fmt.Sprintf("%s/%s/groups/%s", subscriberEndpoint, subscriberID, id)
+func (s *GroupService) Assign(ctx context.Context, groupID, subscriberID string) (*rootGroup, *Response, error) {
+	path := fmt.Sprintf("%s/%s/groups/%s", subscriberEndpoint, subscriberID, groupID)
 
 	req, err := s.client.newRequest(http.MethodPost, path, nil)
 	if err != nil {
@@ -161,8 +162,8 @@ func (s *GroupService) Assign(ctx context.Context, id, subscriberID string) (*ro
 	return root, res, nil
 }
 
-func (s *GroupService) UnAssign(ctx context.Context, id, subscriberID string) (*Response, error) {
-	path := fmt.Sprintf("%s/%s/groups/%s", subscriberEndpoint, subscriberID, id)
+func (s *GroupService) UnAssign(ctx context.Context, groupID, subscriberID string) (*Response, error) {
+	path := fmt.Sprintf("%s/%s/groups/%s", subscriberEndpoint, subscriberID, groupID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
 	if err != nil {
