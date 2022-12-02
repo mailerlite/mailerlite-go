@@ -16,11 +16,13 @@ import (
 )
 
 const (
-	Version = "0.0.1"
+	Version    = "0.0.1"
+	APIVersion = "2022-12-01"
 
 	defaultBaseURL   = "https://connect.mailerlite.com/api"
 	defaultUserAgent = "go-mailerlite" + "/" + Version
 
+	HeaderAPIVersion     = "X-Version"
 	HeaderRateLimit      = "X-RateLimit-Limit"
 	HeaderRateRemaining  = "X-RateLimit-Remaining"
 	HeaderRateRetryAfter = "Retry-After"
@@ -31,8 +33,9 @@ type Client struct {
 	clientMu sync.Mutex   // clientMu protects the client during calls that modify the CheckRedirect func.
 	client   *http.Client // HTTP client used to communicate with the API.
 
-	apiBase *url.URL // apiBase the base used when communicating with the API.
-	apiKey  string   // apiKey used when communicating with the API.
+	apiBase    *url.URL // apiBase the base used when communicating with the API.
+	apiVersion string   // apiVersion the version used when communicating with the API.
+	apiKey     string   // apiKey used when communicating with the API.
 
 	userAgent string // userAgent User agent used when communicating with the API.
 
@@ -45,6 +48,7 @@ type Client struct {
 	Group      *GroupService      // Group service
 	Field      *FieldService      // Field service
 	Form       *FormService       // Form service
+	Segment    *SegmentService    // Segment service
 
 }
 
@@ -107,6 +111,7 @@ func NewClient(apiKey string) *Client {
 	client.Group = (*GroupService)(&client.common)
 	client.Field = (*FieldService)(&client.common)
 	client.Form = (*FormService)(&client.common)
+	client.Segment = (*SegmentService)(&client.common)
 
 	return client
 }
@@ -155,6 +160,8 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 		req.Header.Set("User-Agent", c.userAgent)
 	}
 
+	req.Header.Set(HeaderAPIVersion, APIVersion)
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	req.Header.Set("Accept", "application/json")
@@ -193,7 +200,6 @@ func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*Res
 }
 
 // newResponse creates a new Response for the provided http.Response.
-// r must not be nil.
 func newResponse(r *http.Response) *Response {
 	response := &Response{Response: r}
 	response.Rate = parseRate(r)

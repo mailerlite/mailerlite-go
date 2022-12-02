@@ -35,8 +35,8 @@ type Subscriber struct {
 	Sent           int                    `json:"sent"`
 	OpensCount     int                    `json:"opens_count"`
 	ClicksCount    int                    `json:"clicks_count"`
-	OpenRate       int                    `json:"open_rate"`
-	ClickRate      int                    `json:"click_rate"`
+	OpenRate       float64                `json:"open_rate"`
+	ClickRate      float64                `json:"click_rate"`
 	IPAddress      interface{}            `json:"ip_address"`
 	SubscribedAt   string                 `json:"subscribed_at"`
 	UnsubscribedAt interface{}            `json:"unsubscribed_at"`

@@ -20,16 +20,6 @@ type rootGroups struct {
 	Meta  Meta    `json:"meta"`
 }
 
-type OpenRate struct {
-	Float  int    `json:"float"`
-	String string `json:"string"`
-}
-
-type ClickRate struct {
-	Float  int    `json:"float"`
-	String string `json:"string"`
-}
-
 type Group struct {
 	ID                string    `json:"id"`
 	Name              string    `json:"name"`
@@ -127,7 +117,6 @@ func (s *GroupService) Delete(ctx context.Context, groupID string) (*rootGroup, 
 	return root, res, nil
 }
 
-// TODO: is this required we could use subscribers endpoint to filter by groupID
 func (s *GroupService) Subscribers(ctx context.Context, options *ListGroupSubscriberOptions) (*rootSubscribers, *Response, error) {
 	path := fmt.Sprintf("%s/%s/subscribers", groupEndpoint, options.GroupID)
 
