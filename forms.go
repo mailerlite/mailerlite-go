@@ -52,11 +52,19 @@ type Can struct {
 
 // ListFormOptions - modifies the behavior of FormService.List method
 type ListFormOptions struct {
-	Type   string  `url:"-"`
-	Filter *Filter `json:"filter,omitempty"`
-	Page   int     `url:"page,omitempty"`
-	Limit  int     `url:"limit,omitempty"`
-	Sort   string  `url:"sort,omitempty"`
+	Type    string    `url:"-"`
+	Filters *[]Filter `json:"filters,omitempty"`
+	Page    int       `url:"page,omitempty"`
+	Limit   int       `url:"limit,omitempty"`
+	Sort    string    `url:"sort,omitempty"`
+}
+
+// ListFormSubscriberOptions - modifies the behavior of FormService.Subscribers method
+type ListFormSubscriberOptions struct {
+	FormID  string    `url:"-"`
+	Filters *[]Filter `json:"filters,omitempty"`
+	Page    int       `url:"page,omitempty"`
+	Limit   int       `url:"limit,omitempty"`
 }
 
 func (s *FormService) List(ctx context.Context, options *ListFormOptions) (*rootForms, *Response, error) {
@@ -125,5 +133,19 @@ func (s *FormService) Delete(ctx context.Context, formID string) (*Response, err
 	return res, nil
 }
 
-// TODO: Fix this in docs
-//https://connect.mailerlite.com/api/subscribers?filter[form]={form_id}
+func (s *FormService) Subscribers(ctx context.Context, options *ListFormSubscriberOptions) (*rootSubscribers, *Response, error) {
+	path := fmt.Sprintf("%s/%s/subscribers", formEndpoint, options.FormID)
+
+	req, err := s.client.newRequest(http.MethodGet, path, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(rootSubscribers)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}

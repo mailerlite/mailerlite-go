@@ -124,6 +124,7 @@ func TestWillHandleAPIFilters(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
 	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers?filter%5Bstatus%5D=active")
 		return &http.Response{
 			StatusCode: http.StatusAccepted,
 			Request:    req,
@@ -134,44 +135,7 @@ func TestWillHandleAPIFilters(t *testing.T) {
 					"email": "client@example.com",
 					"status": "active"
 				  }
-				],
-				"links": {
-				  "first": "https://connect.mailerlite.com/api/subscribers?page=1",
-				  "last": "https://connect.mailerlite.com/api/subscribers?page=2",
-				  "prev": null,
-				  "next": "https://connect.mailerlite.com/api/subscribers?page=2"
-				},
-				"meta": {
-				  "current_page": 1,
-				  "from": 1,
-				  "last_page": 2,
-				  "links": [
-					{
-					  "url": null,
-					  "label": "&laquo; Previous",
-					  "active": false
-					},
-					{
-					  "url": "https://connect.mailerlite.com/api/subscribers?page=1",
-					  "label": "1",
-					  "active": true
-					},
-					{
-					  "url": "https://connect.mailerlite.com/api/subscribers?page=2",
-					  "label": "2",
-					  "active": false
-					},
-					{
-					  "url": "https://connect.mailerlite.com/api/subscribers?page=2",
-					  "label": "Next &raquo;",
-					  "active": false
-					}
-				  ],
-				  "path": "https://connect.mailerlite.com/api/subscribers",
-				  "per_page": 1,
-				  "to": 1,
-				  "total": 2
-				}
+				]
 			}`)),
 		}
 	})
@@ -181,7 +145,47 @@ func TestWillHandleAPIFilters(t *testing.T) {
 	client.SetHttpClient(testClient)
 
 	listOptions := &mailerlite.ListSubscriberOptions{
-		Filter: &mailerlite.Filter{Name: "status", Value: "active"},
+		Filters: &[]mailerlite.Filter{{Name: "status", Value: "active"}},
+	}
+
+	subscribers, _, _ := client.Subscriber.List(ctx, listOptions)
+
+	assert.Equal(t, len(subscribers.Data), 1)
+	assert.Equal(t, subscribers.Data[0].Status, "active")
+}
+
+func TestWillHandleMultipleAPIFilters(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers?filter%5Bname%5D=groupName&filter%5Bstatus%5D=active")
+
+		return &http.Response{
+			StatusCode: http.StatusAccepted,
+			Request:    req,
+			Body: io.NopCloser(strings.NewReader(`{
+				"data": [
+				  {
+					"id": "123456789",
+					"email": "client@example.com",
+					"status": "active"
+				  }
+				]
+			}`)),
+		}
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	filters := &[]mailerlite.Filter{
+		{Name: "status", Value: "active"},
+		{Name: "name", Value: "groupName"},
+	}
+
+	listOptions := &mailerlite.ListSubscriberOptions{
+		Filters: filters,
 	}
 
 	subscribers, _, _ := client.Subscriber.List(ctx, listOptions)

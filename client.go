@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -258,26 +259,18 @@ func addOptions(s string, opt interface{}) (string, error) {
 		return s, err
 	}
 
-	filterKey := ""
-	filterValue := ""
-
 	for k, v := range newValues {
-		if k == "Filter" {
+		if k == "Filters" {
+			for _, fv := range v {
+				if fv == "" {
+					continue
+				}
+				split := strings.Fields(strings.Trim(fv, "{}"))
+				filterKey := fmt.Sprintf("filter[%s]", split[0])
+				origValues.Add(filterKey, split[1])
+			}
 			continue
 		}
-		if k == "Filter[Name]" {
-			filterKey = fmt.Sprintf("filter[%s]", v[0])
-			continue
-		}
-		if k == "Filter[Value]" {
-			filterValue = v[0]
-			continue
-		}
-		origValues[k] = v
-	}
-
-	if filterKey != "" {
-		origValues.Add(filterKey, filterValue)
 	}
 
 	origURL.RawQuery = origValues.Encode()

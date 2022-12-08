@@ -55,9 +55,9 @@ type Fields struct {
 
 // ListSubscriberOptions - modifies the behavior of SubscriberService.List method
 type ListSubscriberOptions struct {
-	Filter *Filter `json:"filter,omitempty"`
-	Page   int     `url:"page,omitempty"`
-	Limit  int     `url:"limit,omitempty"`
+	Filters *[]Filter `json:"filters,omitempty"`
+	Page    int       `url:"page,omitempty"`
+	Limit   int       `url:"limit,omitempty"`
 }
 
 // GetSubscriberOptions - modifies the behavior of SubscriberService.Get method

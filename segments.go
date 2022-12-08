@@ -37,10 +37,10 @@ type ListSegmentOptions struct {
 
 // ListSegmentSubscriberOptions - modifies the behavior of SegmentService.Subscribers method
 type ListSegmentSubscriberOptions struct {
-	SegmentID string  `url:"-"`
-	Filter    *Filter `json:"filter,omitempty"`
-	Limit     int     `url:"limit,omitempty"`
-	After     int     `url:"after,omitempty"`
+	SegmentID string    `url:"-"`
+	Filters   *[]Filter `json:"filters,omitempty"`
+	Limit     int       `url:"limit,omitempty"`
+	After     int       `url:"after,omitempty"`
 }
 
 func (s *SegmentService) List(ctx context.Context, options *ListSegmentOptions) (*rootSegments, *Response, error) {

@@ -38,17 +38,17 @@ type Group struct {
 
 // ListGroupOptions - modifies the behavior of GroupService.List method
 type ListGroupOptions struct {
-	Filter *Filter `json:"filter,omitempty"`
-	Page   int     `url:"page,omitempty"`
-	Limit  int     `url:"limit,omitempty"`
-	Sort   string  `url:"sort,omitempty"`
+	Filters *[]Filter `json:"filters,omitempty"`
+	Page    int       `url:"page,omitempty"`
+	Limit   int       `url:"limit,omitempty"`
+	Sort    string    `url:"sort,omitempty"`
 }
 
 type ListGroupSubscriberOptions struct {
-	GroupID string  `url:"-"`
-	Filter  *Filter `json:"filter,omitempty"`
-	Page    int     `url:"page,omitempty"`
-	Limit   int     `url:"limit,omitempty"`
+	GroupID string    `url:"-"`
+	Filters *[]Filter `json:"filters,omitempty"`
+	Page    int       `url:"page,omitempty"`
+	Limit   int       `url:"limit,omitempty"`
 }
 
 func (s *GroupService) List(ctx context.Context, options *ListGroupOptions) (*rootGroups, *Response, error) {

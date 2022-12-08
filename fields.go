@@ -29,10 +29,10 @@ type Field struct {
 
 // ListFieldOptions - modifies the behavior of FieldService.List method
 type ListFieldOptions struct {
-	Filter *Filter `json:"filter,omitempty"`
-	Page   int     `url:"page,omitempty"`
-	Limit  int     `url:"limit,omitempty"`
-	Sort   string  `url:"sort,omitempty"`
+	Filters *[]Filter `json:"filters,omitempty"`
+	Page    int       `url:"page,omitempty"`
+	Limit   int       `url:"limit,omitempty"`
+	Sort    string    `url:"sort,omitempty"`
 }
 
 func (s *FieldService) List(ctx context.Context, options *ListFieldOptions) (*rootFields, *Response, error) {
