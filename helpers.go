@@ -6,6 +6,8 @@ import (
 )
 
 var (
+	SortByID                           = "id"
+	SortByIDDescending                 = "-id"
 	SortByName                         = "name"
 	SortByNameDescending               = "-name"
 	SortByType                         = "type"
@@ -20,6 +22,8 @@ var (
 	SortByConversionsCountDescending   = "-conversions_count"
 	SortByConversionRate               = "conversion_rate"
 	SortByConversionRateDescending     = "-conversion_rate"
+	SortByClicksCount                  = "clicks_count"
+	SortByClicksCountDescending        = "-clicks_count"
 	SortByOpensCount                   = "opens_count"
 	SortByOpensCountDescending         = "-opens_count"
 	SortByVisitors                     = "visitors"
@@ -28,28 +32,60 @@ var (
 	SortByLastRegistrationAtDescending = "-created_at"
 	SortByCreatedAt                    = "created_at"
 	SortByCreatedAtDescending          = "-created_at"
+	SortByUpdatedAt                    = "updated_at"
+	SortByUpdatedAtDescending          = "-updated_at"
 
 	FormTypePopup     = "popup"
 	FormTypeEmbedded  = "embedded"
 	FormTypePromotion = "promotion"
+
+	CampaignTypeRegular = "regular"
+	CampaignTypeAB      = "ab"
+	CampaignTypeResend  = "resend"
+
+	CampaignScheduleTypeInstant   = "instant"
+	CampaignScheduleTypeScheduled = "scheduled"
+	CampaignScheduleTypeTimezone  = "timezone_based"
 )
 
 type Meta struct {
 	// offset  based pagination
-	CurrentPage  int         `json:"current_page"`
-	From         int         `json:"from"`
-	LastPage     int         `json:"last_page"`
-	Links        []MetaLinks `json:"links"`
-	Path         string      `json:"path"`
-	PerPage      int         `json:"per_page"`
-	To           int         `json:"to"`
-	Aggregations interface{} `json:"aggregations"`
+	CurrentPage int         `json:"current_page"`
+	From        int         `json:"from"`
+	LastPage    int         `json:"last_page"`
+	Links       []MetaLinks `json:"links"`
+	Path        string      `json:"path"`
+	PerPage     int         `json:"per_page"`
+	To          int         `json:"to"`
+
+	*Aggregations `json:"aggregations,omitempty"`
+	*Counts       `json:"counts,omitempty"`
 
 	// cursor based pagination
 	Count int `json:"count"`
 	Last  int `json:"last"`
 
+	Total           int `json:"total"`
+	TotalUnfiltered int `json:"total_unfiltered,omitempty"`
+}
+
+type Aggregations struct {
 	Total int `json:"total"`
+	Draft int `json:"draft"`
+	Ready int `json:"ready"`
+	Sent  int `json:"sent"`
+}
+
+type Counts struct {
+	All          int `json:"all"`
+	Opened       int `json:"opened"`
+	Unopened     int `json:"unopened"`
+	Clicked      int `json:"clicked"`
+	Unsubscribed int `json:"unsubscribed"`
+	Forwarded    int `json:"forwarded"`
+	Hardbounced  int `json:"hardbounced"`
+	Softbounced  int `json:"softbounced"`
+	Junk         int `json:"junk"`
 }
 
 // Links manages links that are returned along with a List
@@ -72,6 +108,36 @@ type OpenRate struct {
 }
 
 type ClickRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
+type BounceRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
+type UnsubscribeRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
+type SpamRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
+type HardBounceRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
+type SoftBounceRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
+type ClickToOpenRate struct {
 	Float  float64 `json:"float"`
 	String string  `json:"string"`
 }
