@@ -50,6 +50,7 @@ type Client struct {
 	Field      *FieldService      // Field service
 	Form       *FormService       // Form service
 	Segment    *SegmentService    // Segment service
+	Webhook    *WebhookService    // Webhook service
 	Campaign   *CampaignService   // Campaign service
 	Automation *AutomationService // Automation service
 	Timezone   *TimezoneService   // Timezone service
@@ -116,6 +117,7 @@ func NewClient(apiKey string) *Client {
 	client.Field = (*FieldService)(&client.common)
 	client.Form = (*FormService)(&client.common)
 	client.Segment = (*SegmentService)(&client.common)
+	client.Webhook = (*WebhookService)(&client.common)
 	client.Campaign = (*CampaignService)(&client.common)
 	client.Automation = (*AutomationService)(&client.common)
 	client.Timezone = (*TimezoneService)(&client.common)
