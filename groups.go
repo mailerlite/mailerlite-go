@@ -100,21 +100,20 @@ func (s *GroupService) Update(ctx context.Context, groupID, groupName string) (*
 	return root, res, nil
 }
 
-func (s *GroupService) Delete(ctx context.Context, groupID string) (*rootGroup, *Response, error) {
+func (s *GroupService) Delete(ctx context.Context, groupID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", groupEndpoint, groupID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	root := new(rootGroup)
-	res, err := s.client.do(ctx, req, root)
+	res, err := s.client.do(ctx, req, nil)
 	if err != nil {
-		return nil, res, err
+		return res, err
 	}
 
-	return root, res, nil
+	return res, nil
 }
 
 func (s *GroupService) Subscribers(ctx context.Context, options *ListGroupSubscriberOptions) (*rootSubscribers, *Response, error) {

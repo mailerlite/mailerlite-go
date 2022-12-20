@@ -260,15 +260,235 @@ func main() {
 ## Groups
 
 ### Get a list of groups
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListGroupOptions{
+		Page:  1,
+		Limit: 10,
+		Sort: mailerlite.SortByName,
+	}
+
+	groups, _, err := client.Group.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(groups.Meta.Total)
+}
+```
+
 ### Create a group
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Group.Create(ctx, "group-name")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Update a group
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Group.Update(ctx, "group-id", "Group Name")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Delete a group
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, err := client.Group.Delete(ctx, "69861610909337422")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get subscribers belonging to a group
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listSubscriberOptions := &mailerlite.ListGroupSubscriberOptions{
+		GroupID: "group-id",
+		Filter:  &mailerlite.Filter{Name: "status", Value: "active"},
+	}
+		
+	subscribers, _, err := client.Group.Subscribers(ctx, listSubscriberOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(subscribers.Meta.Total)
+}
+```
+
 ### Assign subscriber to a group
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Group.Assign(ctx, "group-id", "subscriber-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Unassign subscriber from a group
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Group.UnAssign(ctx, "group-id", "subscriber-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 ## Segments
 
 ### Get a list of segments
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListSegmentOptions{
+		Page:  1,
+		Limit: 10,
+	}
+
+	_, _, err := client.Segment.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Update a segment
 ### Delete a segment
 ### Get subscribers belonging to a segment
