@@ -85,8 +85,11 @@ func main() {
 
 	listOptions := &mailerlite.ListSubscriberOptions{
 		Limit:  200,
-		Page:   0,
-		Filter: &mailerlite.Filter{Name: "status", Value: "active"},
+		Page:   0, 
+		Filters: &[]mailerlite.Filter{{
+            Name:  "status",
+            Value: "active",
+        }},
 	}
 
 	subscribers, _, err := client.Subscriber.List(ctx, listOptions)
@@ -392,7 +395,10 @@ func main() {
 
 	listSubscriberOptions := &mailerlite.ListGroupSubscriberOptions{
 		GroupID: "group-id",
-		Filter:  &mailerlite.Filter{Name: "status", Value: "active"},
+		Filters: &[]mailerlite.Filter{{
+			Name:  "status",
+			Value: "active",
+		}},
 	}
 		
 	subscribers, _, err := client.Group.Subscribers(ctx, listSubscriberOptions)
@@ -490,15 +496,207 @@ func main() {
 ```
 
 ### Update a segment
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Segment.Update(ctx, "segment-id", "Segment Name")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Delete a segment
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, err := client.Segment.Delete(ctx, "segment-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get subscribers belonging to a segment
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listSubscriberOptions := &mailerlite.ListSegmentSubscriberOptions{
+		SegmentID: "segment-id",
+		Filters: &[]mailerlite.Filter{{
+			Name:  "status",
+			Value: "active",
+		}},
+	}
+	
+	_, _, err := client.Segment.Subscribers(ctx, listSubscriberOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 ## Fields
 
 ### Get a list of fields
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListFieldOptions{
+		Page:   1,
+		Limit:  10,
+		Filters: &[]mailerlite.Filter{{
+			Name:  "keyword",
+			Value: "name",
+		}},
+		Sort:   mailerlite.SortByName,
+	}
+	
+	_, _, err := client.Field.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Create a field
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	// text, number or data
+	_, _, err := client.Field.Create(ctx, "field-name", "field-type")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Update a field
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Field.Update(ctx, "field-id", "Field name")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Delete a field
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, err := client.Field.Delete(ctx, "field-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 ## Automations
 

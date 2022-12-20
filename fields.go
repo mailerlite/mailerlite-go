@@ -87,19 +87,18 @@ func (s *FieldService) Update(ctx context.Context, fieldID, fieldName string) (*
 	return root, res, nil
 }
 
-func (s *FieldService) Delete(ctx context.Context, fieldID string) (*rootField, *Response, error) {
+func (s *FieldService) Delete(ctx context.Context, fieldID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", fieldEndpoint, fieldID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	root := new(rootField)
-	res, err := s.client.do(ctx, req, root)
+	res, err := s.client.do(ctx, req, nil)
 	if err != nil {
-		return nil, res, err
+		return res, err
 	}
 
-	return root, res, nil
+	return res, nil
 }
