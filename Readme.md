@@ -121,7 +121,7 @@ func main() {
 	ctx := context.TODO()
 
 	getOptions := &mailerlite.GetSubscriberOptions{
-		ID: 123456789,
+		SubscriberID: "subscriber-id",
 		//Email: "client@example.com"
 	}
 
@@ -701,8 +701,101 @@ func main() {
 ## Automations
 
 ### Get a list of automations
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListAutomationOptions{
+		Filters: &[]mailerlite.Filter{{
+			Name:  "status",
+			Value: "draft",
+		}},
+		Page:  1,
+		Limit: 10,
+	}
+	
+	_, _, err := client.Automation.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.Get(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get subscribers activity for an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListAutomationSubscriberOptions{
+		Filters: &[]mailerlite.Filter{{
+			Name:  "status",
+			Value: "active",
+		}},
+		AutomationID: "automation-id",
+		Page:         1,
+		Limit:        10,
+	}
+
+	_, _, err := client.Automation.Subscribers(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 ## Campaigns
 
@@ -730,19 +823,208 @@ func main() {
 ## Webhooks
 
 ### Get a list of webhooks
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.ListWebhookOptions{
+		Sort:  mailerlite.SortByName,
+		Page:  1,
+		Limit: 10,
+	}
+
+	_, _, err := client.Webhook.List(ctx, options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get a webhook
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Webhook.Get(ctx, "webhook-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Create a webhook
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.CreateWebhookOptions{
+		Name:   "",
+		Events: []string{"subscriber.bounced"},
+		Url:    "https://example.com/webhook",
+	}
+	
+	_, _, err := client.Webhook.Create(ctx, options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Update a webhook
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.UpdateWebhookOptions{
+		WebhookID: "webhook-id",
+		Events:    []string{"subscriber.bounced", "subscriber.unsubscribed"},
+		Name:      "Update",
+	}
+	
+	_, _, err := client.Webhook.Update(ctx, options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Delete a webhook
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, err := client.Webhook.Delete(ctx, "75000728688526795")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 ## Timezones
 
 ### Get a list of timezones
 
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Timezone.List(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ## Campaign languages
 
 ### Get a list of languages
 
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Campaign.Languages(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 # Testing
 

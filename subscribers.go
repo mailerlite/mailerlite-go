@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 )
 
 const subscriberEndpoint = "/subscribers"
@@ -62,8 +61,8 @@ type ListSubscriberOptions struct {
 
 // GetSubscriberOptions - modifies the behavior of SubscriberService.Get method
 type GetSubscriberOptions struct {
-	ID    int    `json:"id,omitempty"`
-	Email string `json:"email,omitempty"`
+	SubscriberID string `json:"id,omitempty"`
+	Email        string `json:"email,omitempty"`
 }
 
 func (s *SubscriberService) List(ctx context.Context, options *ListSubscriberOptions) (*rootSubscribers, *Response, error) {
@@ -100,7 +99,7 @@ func (s *SubscriberService) Count(ctx context.Context) (*count, *Response, error
 
 // Get - get a single subscriber by email or ID
 func (s *SubscriberService) Get(ctx context.Context, options *GetSubscriberOptions) (*rootSubscriber, *Response, error) {
-	param := strconv.Itoa(options.ID)
+	param := options.SubscriberID
 	if options.Email != "" {
 		param = options.Email
 	}

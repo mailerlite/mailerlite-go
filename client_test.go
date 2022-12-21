@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"io"
 	"net/http"
 	"strings"
@@ -31,27 +32,85 @@ func NewTestClient(fn RoundTripFunc) *http.Client {
 	}
 }
 
-func TestNewClient(t *testing.T) {
-	ml := mailerlite.NewClient(testKey)
-
-	assert.Equal(t, ml.APIKey(), testKey)
-	assert.Equal(t, ml.Client(), http.DefaultClient)
-
-	client := new(http.Client)
-	ml.SetHttpClient(client)
-	assert.Equal(t, client, ml.Client())
-
+func TestPointerFunctions(t *testing.T) {
+	assert.False(t, *mailerlite.Bool(false))
+	assert.Equal(t, *mailerlite.Int(1), 1)
+	assert.Equal(t, *mailerlite.Int64(1), int64(1))
+	assert.Equal(t, *mailerlite.String("test"), string("test"))
 }
 
-func TestCanMakeMockApiCall(t *testing.T) {
+func TestNewClient(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	assert.Equal(t, client.APIKey(), testKey)
+	assert.Equal(t, client.Client(), http.DefaultClient)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+	assert.Equal(t, testClient, client.Client())
+
+	client.SetAPIKey("valid-api-key-2")
+}
+
+func TestCanChangeAPIKey(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	assert.Equal(t, client.APIKey(), testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.Header.Get("Authorization"), "Bearer valid-api-key-2")
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	client.SetAPIKey("valid-api-key-2")
+
+	_, res, err := client.Timezone.List(context.TODO())
+	if err != nil {
+		return
+	}
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+}
+
+func TestCanSetUserAgent(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
 	testClient := NewTestClient(func(req *http.Request) *http.Response {
-		// Test request parameters
 		assert.Equal(t, req.Header.Get("user-agent"), fmt.Sprintf("go-mailerlite/%v", mailerlite.Version))
-		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers")
 		return &http.Response{
-			StatusCode: http.StatusAccepted,
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	languages, res, err := client.Campaign.Languages(context.TODO())
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+	assert.NotEmpty(t, languages.Data)
+}
+func TestCanMakeApiCall(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.Header.Get("user-agent"), fmt.Sprintf("go-mailerlite/%v", mailerlite.Version))
+		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/timezones")
+		return &http.Response{
+			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 		}
 	})
@@ -60,14 +119,12 @@ func TestCanMakeMockApiCall(t *testing.T) {
 
 	client.SetHttpClient(testClient)
 
-	listOptions := &mailerlite.ListSubscriberOptions{}
-
-	_, res, err := client.Subscriber.List(ctx, listOptions)
+	_, res, err := client.Timezone.List(ctx)
 	if err != nil {
 		return
 	}
 
-	assert.Equal(t, res.StatusCode, http.StatusAccepted)
+	assert.Equal(t, res.StatusCode, http.StatusOK)
 
 }
 
@@ -118,6 +175,35 @@ func TestWillHandleAPIError(t *testing.T) {
 	assert.Error(t, err)
 	assert.IsType(t, err, &mailerlite.ErrorResponse{})
 	assert.Equal(t, err.Error(), "GET https://connect.mailerlite.com/api/subscribers: 422 The given data was invalid. map[filter:[The filter must be an array.]]")
+}
+
+func TestWillHandleAPIError202(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusCreated,
+			Request:    req,
+			Body:       io.NopCloser(strings.NewReader("")),
+		}
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	listOptions := &mailerlite.ListSubscriberOptions{}
+
+	_, _, err := client.Subscriber.List(ctx, listOptions)
+
+	if err, ok := err.(*mailerlite.ErrorResponse); ok {
+		assert.Equal(t, "The given data was invalid.", err.Message)
+		assert.Equal(t, 1, len(err.Errors))
+	}
+
+	spew.Dump(err)
+
+	assert.Error(t, err)
 }
 
 func TestWillHandleAPIFilters(t *testing.T) {
