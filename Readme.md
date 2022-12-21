@@ -38,7 +38,7 @@ MailerLite Golang SDK
   - [Campaigns](#campaigns)
     - [Get a list of campaigns](#get-a-list-of-campaigns)
     - [Get a campaign](#get-a-campaign)
-    - [Create a campaign](#update-a-campaign)
+    - [Create a campaign](#create-a-campaign)
     - [Update a campaign](#update-a-campaign)
     - [Schedule a campaign](#schedule-a-campaign)
     - [Cancel a ready campaign](#cancel-a-ready-campaign)
