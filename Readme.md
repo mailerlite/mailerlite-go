@@ -87,9 +87,9 @@ func main() {
 		Limit:  200,
 		Page:   0, 
 	    Filters: &[]mailerlite.Filter{{
-            Name:  "status",
-            Value: "active",
-        }},
+			Name:  "status", 
+			Value: "active",
+		}},
 	}
 
 	subscribers, _, err := client.Subscriber.List(ctx, listOptions)
