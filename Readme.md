@@ -70,34 +70,34 @@ MailerLite Golang SDK
 package main
 
 import (
-	"context"
-	"log"
+  "context"
+  "log"
 
-	"github.com/mailerlite/mailerlite-go"
+  "github.com/mailerlite/mailerlite-go"
 )
 
 var APIToken = "Api Token Here"
 
 func main() {
-	client := mailerlite.NewClient(APIToken)
+  client := mailerlite.NewClient(APIToken)
 
-	ctx := context.TODO()
+  ctx := context.TODO()
 
-	listOptions := &mailerlite.ListSubscriberOptions{
-		Limit:  200,
-		Page:   0, 
-	    Filters: &[]mailerlite.Filter{{
-            Name:  "status", 
-            Value: "active",
-        }},
-	}
+  listOptions := &mailerlite.ListSubscriberOptions{
+    Limit:  200,
+    Page:   0,
+    Filters: &[]mailerlite.Filter{{
+      Name:  "status",
+      Value: "active",
+    }},
+  }
 
-	subscribers, _, err := client.Subscriber.List(ctx, listOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
+  subscribers, _, err := client.Subscriber.List(ctx, listOptions)
+  if err != nil {
+    log.Fatal(err)
+  }
 
-	log.Print(subscribers.Meta.Total)
+  log.Print(subscribers.Meta.Total)
 }
 ```
 
