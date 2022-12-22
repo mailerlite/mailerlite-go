@@ -5,63 +5,65 @@ MailerLite Golang SDK
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 # Table of Contents
+
 - [Installation](#installation)
 - [Usage](#usage)
-  - [Subscribers](#subscribers)
-    - [Get a list of subscribers](#get-a-list-of-subscribers)
-    - [Get a single subscriber](#get-a-single-subscriber)
-    - [Count all subscribers](#count-all-subscribers)
-    - [Create a subscriber](#create-a-subscriber)
-    - [Update a subscriber](#update-a-subscriber)
-    - [Delete a subscriber](#delete-a-subscriber)
-  - [Groups](#groups)
-    - [Get a list of groups](#get-a-list-of-groups)
-    - [Create a group](#create-a-group)
-    - [Update a group](#update-a-group)
-    - [Delete a group](#delete-a-group)
-    - [Get subscribers belonging to a group](#get-subscribers-belonging-to-a-group)
-    - [Assign subscriber to a group](#assign-subscribers-to-a-group)
-  - [Segments](#segments)
-    - [Get a list of segments](#get-a-list-of-segments)
-    - [Update a segment](#update-a-segment)
-    - [Delete a segment](#delete-a-segment)
-    - [Get subscribers belonging to a segment](#get-subscribers-belonging-to-a-segment)
-  - [Fields](#fields)
-    - [Get a list of fields](#get-a-list-of-fields)
-    - [Create a field](#create-a-field)
-    - [Update a field](#update-a-field)
-    - [Delete a field](#delete-a-field)
-  - [Automations](#automations)
-    - [Get a list of automations](#get-a-list-of-automations)
-    - [Get an automation](#get-an-automation)
-    - [Get subscribers activity for an automation](#get-subscribers-activity-for-an-automation)
-  - [Campaigns](#campaigns)
-    - [Get a list of campaigns](#get-a-list-of-campaigns)
-    - [Get a campaign](#get-a-campaign)
-    - [Create a campaign](#create-a-campaign)
-    - [Update a campaign](#update-a-campaign)
-    - [Schedule a campaign](#schedule-a-campaign)
-    - [Cancel a ready campaign](#cancel-a-ready-campaign)
-    - [Delete a campaign](#delete-a-campaign)
-    - [Get subscribers activity for a campaign](#get-subscribers-activity-for-an-campaign)
-  - [Forms](#forms)
-    - [Get a list of forms](#get-a-list-of-forms)
-    - [Get a form](#get-a-form)
-    - [Update a form](#update-a-form)
-    - [Delete a form](#delete-a-form)
-    - [Get subscribers of a form](#get-subscribers-of-a-form)
-  - [Batching](#batching)
-    - [Create a new batch](#create-a-new-batch)
-  - [Webhooks](#webhooks)
-    - [Get a list of webhooks](#get-a-list-of-webhooks)
-    - [Get a webhook](#get-a-webhook)
-    - [Create a webhook](#update-a-webhook)
-    - [Update a webhook](#update-a-webhook)
-    - [Delete a webhook](#delete-a-webhook)
-  - [Timezones](#timezones)
-    - [Get a list of timezones](#get-a-list-of-timezones)
-  - [Campaign languages](#languages)
-    - [Get a list of languages](#get-a-list-of-languages)
+    - [Subscribers](#subscribers)
+        - [Get a list of subscribers](#get-a-list-of-subscribers)
+        - [Get a single subscriber](#get-a-single-subscriber)
+        - [Count all subscribers](#count-all-subscribers)
+        - [Create a subscriber](#create-a-subscriber)
+        - [Update a subscriber](#update-a-subscriber)
+        - [Delete a subscriber](#delete-a-subscriber)
+    - [Groups](#groups)
+        - [Get a list of groups](#get-a-list-of-groups)
+        - [Create a group](#create-a-group)
+        - [Update a group](#update-a-group)
+        - [Delete a group](#delete-a-group)
+        - [Get subscribers belonging to a group](#get-subscribers-belonging-to-a-group)
+        - [Assign subscriber to a group](#assign-subscribers-to-a-group)
+    - [Segments](#segments)
+        - [Get a list of segments](#get-a-list-of-segments)
+        - [Update a segment](#update-a-segment)
+        - [Delete a segment](#delete-a-segment)
+        - [Get subscribers belonging to a segment](#get-subscribers-belonging-to-a-segment)
+    - [Fields](#fields)
+        - [Get a list of fields](#get-a-list-of-fields)
+        - [Create a field](#create-a-field)
+        - [Update a field](#update-a-field)
+        - [Delete a field](#delete-a-field)
+    - [Automations](#automations)
+        - [Get a list of automations](#get-a-list-of-automations)
+        - [Get an automation](#get-an-automation)
+        - [Get subscribers activity for an automation](#get-subscribers-activity-for-an-automation)
+    - [Campaigns](#campaigns)
+        - [Get a list of campaigns](#get-a-list-of-campaigns)
+        - [Get a campaign](#get-a-campaign)
+        - [Create a campaign](#create-a-campaign)
+        - [Update a campaign](#update-a-campaign)
+        - [Schedule a campaign](#schedule-a-campaign)
+        - [Cancel a ready campaign](#cancel-a-ready-campaign)
+        - [Delete a campaign](#delete-a-campaign)
+        - [Get subscribers activity for a campaign](#get-subscribers-activity-for-an-campaign)
+    - [Forms](#forms)
+        - [Get a list of forms](#get-a-list-of-forms)
+        - [Get a form](#get-a-form)
+        - [Update a form](#update-a-form)
+        - [Delete a form](#delete-a-form)
+        - [Get subscribers of a form](#get-subscribers-of-a-form)
+    - [Batching](#batching)
+        - [Create a new batch](#create-a-new-batch)
+    - [Webhooks](#webhooks)
+        - [Get a list of webhooks](#get-a-list-of-webhooks)
+        - [Get a webhook](#get-a-webhook)
+        - [Create a webhook](#update-a-webhook)
+        - [Update a webhook](#update-a-webhook)
+        - [Delete a webhook](#delete-a-webhook)
+    - [Timezones](#timezones)
+        - [Get a list of timezones](#get-a-list-of-timezones)
+    - [Campaign languages](#languages)
+        - [Get a list of languages](#get-a-list-of-languages)
+
 ## Subscribers
 
 ### Get a list of subscribers
@@ -70,34 +72,34 @@ MailerLite Golang SDK
 package main
 
 import (
-  "context"
-  "log"
+	"context"
+	"log"
 
-  "github.com/mailerlite/mailerlite-go"
+	"github.com/mailerlite/mailerlite-go"
 )
 
 var APIToken = "Api Token Here"
 
 func main() {
-  client := mailerlite.NewClient(APIToken)
+	client := mailerlite.NewClient(APIToken)
 
-  ctx := context.TODO()
+	ctx := context.TODO()
 
-  listOptions := &mailerlite.ListSubscriberOptions{
-    Limit:  200,
-    Page:   0,
-    Filters: &[]mailerlite.Filter{{
-      Name:  "status",
-      Value: "active",
-    }},
-  }
+	listOptions := &mailerlite.ListSubscriberOptions{
+		Limit:  200,
+		Page:   0, 
+		Filters: &[]mailerlite.Filter{{
+			Name:  "status", 
+			Value: "active",
+		}},
+	}
 
-  subscribers, _, err := client.Subscriber.List(ctx, listOptions)
-  if err != nil {
-    log.Fatal(err)
-  }
+	subscribers, _, err := client.Subscriber.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-  log.Print(subscribers.Meta.Total)
+	log.Print(subscribers.Meta.Total)
 }
 ```
 
@@ -1429,18 +1431,20 @@ $ go test
 ```
 
 <a name="support-and-feedback"></a>
+
 # Support and Feedback
 
 In case you find any bugs, submit an issue directly here in GitHub.
 
 You are welcome to create SDK for any other programming language.
 
-If you have any trouble using our API or SDK feel free to contact our support by email [info@mailerlite.com](mailto:info@mailerlite.com)
+If you have any trouble using our API or SDK feel free to contact our support by
+email [info@mailerlite.com](mailto:info@mailerlite.com)
 
 The official API documentation is at [https://developers.mailerlite.com](https://developers.mailerlite.com)
 
-
 <a name="license"></a>
+
 # License
 
 [The MIT License (MIT)](LICENSE)
