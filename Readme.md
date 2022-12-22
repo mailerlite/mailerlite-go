@@ -800,25 +800,419 @@ func main() {
 ## Campaigns
 
 ### Get a list of campaigns
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListCampaignOptions{
+		Filters: &[]mailerlite.Filter{{
+			Name:  "status",
+			Value: "draft",
+		}},
+		Page:  1,
+		Limit: 10,
+	}
+	
+	_, _, err := client.Campaign.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get a campaign
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Campaign.Get(ctx, "campaign-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Create a campaign
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	emails := &[]mailerlite.Emails{
+		{
+			Subject:  "Subject",
+			FromName: "Your Name",
+			From:     "your@domain.com",
+			Content:  "<p>This is the HTML content</p>",
+		},
+	}
+	
+	campaign := &mailerlite.CreateCampaign{
+		Name:   "Campaign Name",
+		Type:   mailerlite.CampaignTypeRegular,
+		Emails: *emails,
+	}
+	
+	_, _, err := client.Campaign.Create(ctx, campaign)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Update a campaign
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	emails := &[]mailerlite.Emails{
+		{
+			Subject:  "Subject",
+			FromName: "Your Name",
+			From:     "your@domain.com",
+			Content:  "<p>This is the HTML content</p>",
+		},
+	}
+	
+	campaign := &mailerlite.UpdateCampaign{
+		Name:   "Campaign Name",
+		Type:   mailerlite.CampaignTypeRegular,
+		Emails: *emails,
+	}
+	
+	_, _, err := client.Campaign.Update(ctx, "campaign-id", campaign)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Schedule a campaign
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	schedule := &mailerlite.ScheduleCampaign{
+		Delivery: mailerlite.CampaignScheduleTypeInstant,
+	}
+	
+	_, _, err := client.Campaign.Schedule(ctx, "campaign-id", schedule)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Cancel a ready campaign
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Campaign.Cancel(ctx, "campaign-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Delete a campaign
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, err := client.Campaign.Delete(ctx, "campaign-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get subscribers activity for a campaign
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListCampaignSubscriberOptions{
+		CampaignID: "campaign-id",
+		Page:       1,
+		Limit:      10,
+	}
+	
+	_, _, err := client.Campaign.Subscribers(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 ## Forms
 
 ### Get a list of forms
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListFormOptions{
+		Type:   mailerlite.FormTypePopup,
+		Page:   1,
+		Limit:  10,
+      	Filters: &[]mailerlite.Filter{{
+      		Name:  "name",
+      		Value: "Form Name",
+      	}},
+		Sort:   mailerlite.SortByName,
+	}
+	
+	_, _, err := client.Form.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get a form
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	form, _, err := client.Form.Get(ctx, "form-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Update a form
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Form.Update(ctx, "form-id", "Form Name")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Delete a form
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, err := client.Form.Delete(ctx, "form-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Get subscribers of a form
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListFormSubscriberOptions{
+		Page:  1,
+		Limit: 10,
+		Filters: &[]mailerlite.Filter{{
+			Name:  "status",
+			Value: "active",
+		}},
+	}
+
+	_, _, err := client.Form.Subscribers(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
 
 ## Batching
 
 ### Create a new batch
+
+TBC
 
 ## Webhooks
 

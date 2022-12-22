@@ -146,7 +146,7 @@ type CreateCampaign struct {
 	Groups         []string        `json:"groups,omitempty"`
 	Segments       []string        `json:"segments,omitempty"`
 	AbSettings     *AbSettings     `json:"ab_settings,omitempty"`
-	ResendSettings *ResendSettings `json:"resend_settings"`
+	ResendSettings *ResendSettings `json:"resend_settings,omitempty"`
 }
 
 type Emails struct {
