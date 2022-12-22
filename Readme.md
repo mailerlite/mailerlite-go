@@ -86,7 +86,7 @@ func main() {
 	listOptions := &mailerlite.ListSubscriberOptions{
 		Limit:  200,
 		Page:   0, 
-		Filters: &[]mailerlite.Filter{{
+	    Filters: &[]mailerlite.Filter{{
             Name:  "status",
             Value: "active",
         }},
