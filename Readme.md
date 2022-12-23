@@ -724,7 +724,7 @@ func main() {
 	listOptions := &mailerlite.ListAutomationOptions{
 		Filters: &[]mailerlite.Filter{{
 			Name:  "status",
-			Value: "draft",
+			Value: true,
 		}},
 		Page:  1,
 		Limit: 10,
