@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	Version    = "0.0.1"
-	APIVersion = "2022-12-01"
+	Version    = "0.0.2"
+	APIVersion = "2023-18-04"
 
 	defaultBaseURL   = "https://connect.mailerlite.com/api"
 	defaultUserAgent = "go-mailerlite" + "/" + Version
