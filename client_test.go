@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"io"
 	"net/http"
 	"strings"
@@ -200,8 +199,6 @@ func TestWillHandleAPIError202(t *testing.T) {
 		assert.Equal(t, "The given data was invalid.", err.Message)
 		assert.Equal(t, 1, len(err.Errors))
 	}
-
-	spew.Dump(err)
 
 	assert.Error(t, err)
 }
