@@ -27,24 +27,24 @@ type count struct {
 }
 
 type Subscriber struct {
-	ID             string                 `json:"id"`
-	Email          string                 `json:"email"`
-	Status         string                 `json:"status"`
-	Source         string                 `json:"source"`
-	Sent           int                    `json:"sent"`
-	OpensCount     int                    `json:"opens_count"`
-	ClicksCount    int                    `json:"clicks_count"`
-	OpenRate       float64                `json:"open_rate"`
-	ClickRate      float64                `json:"click_rate"`
-	IPAddress      interface{}            `json:"ip_address"`
-	SubscribedAt   string                 `json:"subscribed_at"`
-	UnsubscribedAt interface{}            `json:"unsubscribed_at"`
-	CreatedAt      string                 `json:"created_at"`
-	UpdatedAt      string                 `json:"updated_at"`
-	Fields         map[string]interface{} `json:"fields"`
-	Groups         []Group                `json:"groups"`
-	OptedInAt      string                 `json:"opted_in_at"`
-	OptinIP        string                 `json:"optin_ip"`
+	ID             string                 `json:"id,omitempty"`
+	Email          string                 `json:"email,omitempty"`
+	Status         string                 `json:"status,omitempty"`
+	Source         string                 `json:"source,omitempty"`
+	Sent           int                    `json:"sent,omitempty"`
+	OpensCount     int                    `json:"opens_count,omitempty"`
+	ClicksCount    int                    `json:"clicks_count,omitempty"`
+	OpenRate       float64                `json:"open_rate,omitempty"`
+	ClickRate      float64                `json:"click_rate,omitempty"`
+	IPAddress      interface{}            `json:"ip_address,omitempty"`
+	SubscribedAt   string                 `json:"subscribed_at,omitempty"`
+	UnsubscribedAt interface{}            `json:"unsubscribed_at,omitempty"`
+	CreatedAt      string                 `json:"created_at,omitempty"`
+	UpdatedAt      string                 `json:"updated_at,omitempty"`
+	Fields         map[string]interface{} `json:"fields,omitempty"`
+	Groups         []Group                `json:"groups,omitempty"`
+	OptedInAt      string                 `json:"opted_in_at,omitempty"`
+	OptinIP        string                 `json:"optin_ip,omitempty"`
 }
 
 type Fields struct {
