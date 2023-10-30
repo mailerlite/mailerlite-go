@@ -117,3 +117,51 @@ func TestCanCreateSubscrber(t *testing.T) {
 
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 }
+
+func TestCanDeleteSubscrber(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.Method, http.MethodDelete)
+		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers/1234")
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+		}
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	_, res, err := client.Subscriber.Delete(ctx, "1234")
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+}
+
+func TestCanForgetSubscrber(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.Method, http.MethodPost)
+		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers/1234/forget")
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+		}
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	_, res, err := client.Subscriber.Forget(ctx, "1234")
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+}
