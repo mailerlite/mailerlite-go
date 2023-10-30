@@ -164,3 +164,20 @@ func (s *SubscriberService) Delete(ctx context.Context, subscriberID string) (*r
 
 	return root, res, nil
 }
+
+func (s *SubscriberService) Forget(ctx context.Context, subscriberID string) (*rootSubscriber, *Response, error) {
+	path := fmt.Sprintf("%s/%s/forget", subscriberEndpoint, subscriberID)
+
+	req, err := s.client.newRequest(http.MethodPost, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(rootSubscriber)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
