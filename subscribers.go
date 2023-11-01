@@ -148,21 +148,20 @@ func (s *SubscriberService) Update(ctx context.Context, subscriber *Subscriber) 
 	return root, res, nil
 }
 
-func (s *SubscriberService) Delete(ctx context.Context, subscriberID string) (*rootSubscriber, *Response, error) {
+func (s *SubscriberService) Delete(ctx context.Context, subscriberID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", subscriberEndpoint, subscriberID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	root := new(rootSubscriber)
-	res, err := s.client.do(ctx, req, root)
+	res, err := s.client.do(ctx, req, nil)
 	if err != nil {
-		return nil, res, err
+		return res, err
 	}
 
-	return root, res, nil
+	return res, nil
 }
 
 func (s *SubscriberService) Forget(ctx context.Context, subscriberID string) (*rootSubscriber, *Response, error) {

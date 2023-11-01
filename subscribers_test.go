@@ -3,11 +3,12 @@ package mailerlite_test
 import (
 	"bytes"
 	"context"
-	"github.com/mailerlite/mailerlite-go"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"testing"
+
+	"github.com/mailerlite/mailerlite-go"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCanListSubscrbers(t *testing.T) {
@@ -134,9 +135,9 @@ func TestCanDeleteSubscrber(t *testing.T) {
 
 	client.SetHttpClient(testClient)
 
-	_, res, err := client.Subscriber.Delete(ctx, "1234")
+	res, err := client.Subscriber.Delete(ctx, "1234")
 	if err != nil {
-		return
+		assert.Fail(t, "Delete request threw an error")
 	}
 
 	assert.Equal(t, res.StatusCode, http.StatusOK)
