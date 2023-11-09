@@ -138,9 +138,9 @@ func (s *SubscriberService) Upsert(ctx context.Context, subscriber *Subscriber) 
 }
 
 func (s *SubscriberService) Update(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
-	endpoint := subscriberEndpoint + "/" + subscriber.ID
+	path := fmt.Sprintf("%s/%s", subscriberEndpoint, subscriber.ID)
 
-	req, err := s.client.newRequest(http.MethodPut, endpoint, subscriber)
+	req, err := s.client.newRequest(http.MethodPut, path, subscriber)
 	if err != nil {
 		return nil, nil, err
 	}
