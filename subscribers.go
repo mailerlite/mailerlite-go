@@ -133,8 +133,14 @@ func (s *SubscriberService) Create(ctx context.Context, subscriber *Subscriber) 
 	return root, res, nil
 }
 
+func (s *SubscriberService) Upsert(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
+	return s.Create(ctx, subscriber)
+}
+
 func (s *SubscriberService) Update(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
-	req, err := s.client.newRequest(http.MethodPost, subscriberEndpoint, subscriber)
+	path := fmt.Sprintf("%s/%s", subscriberEndpoint, subscriber.ID)
+
+	req, err := s.client.newRequest(http.MethodPut, path, subscriber)
 	if err != nil {
 		return nil, nil, err
 	}
