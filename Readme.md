@@ -2,7 +2,7 @@
 
 MailerLite Golang SDK
 
-[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE) [![Go Reference](https://pkg.go.dev/badge/github.com/mailerlite/mailerlite-go.svg)](https://pkg.go.dev/github.com/mailerlite/mailerlite-go)
 
 # Table of Contents
 
