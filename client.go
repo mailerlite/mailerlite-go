@@ -279,6 +279,13 @@ func addOptions(s string, opt interface{}) (string, error) {
 				origValues.Add(filterKey, split[1])
 			}
 			continue
+		} else {
+			for _, fv := range v {
+				if fv == "" {
+					continue
+				}
+				origValues.Add(k, fv)
+			}
 		}
 	}
 
