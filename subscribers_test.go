@@ -91,7 +91,7 @@ func TestCanGetSingleSubscrberByEmail(t *testing.T) {
 	assert.Equal(t, res.StatusCode, http.StatusAccepted)
 }
 
-func TestCanCreateSubscrber(t *testing.T) {
+func TestCanCreateSubscriber(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
 	testClient := NewTestClient(func(req *http.Request) *http.Response {
@@ -99,7 +99,7 @@ func TestCanCreateSubscrber(t *testing.T) {
 		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers")
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+			Body:       io.NopCloser(bytes.NewBufferString(`{"data":{}}`)),
 		}
 	})
 
@@ -107,16 +107,36 @@ func TestCanCreateSubscrber(t *testing.T) {
 
 	client.SetHttpClient(testClient)
 
-	options := &mailerlite.Subscriber{
-		Email: "test@test.com",
+	cases := []struct {
+		name    string
+		options *mailerlite.CreateSubscriberRequest
+	}{
+		{
+			name: "with mutable fields",
+			options: &mailerlite.CreateSubscriberRequest{
+				Email: "test@test.com",
+				MutableSubscriberFields: mailerlite.MutableSubscriberFields{
+					Groups: []string{"123", "456"},
+				},
+			},
+		},
+		{
+			name: "without mutable fields",
+			options: &mailerlite.CreateSubscriberRequest{
+				Email: "test@test.com",
+			},
+		},
 	}
 
-	_, res, err := client.Subscriber.Create(ctx, options)
-	if err != nil {
-		return
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, res, err := client.Subscriber.Create(ctx, tc.options)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assert.Equal(t, res.StatusCode, http.StatusOK)
+		})
 	}
-
-	assert.Equal(t, res.StatusCode, http.StatusOK)
 }
 
 func TestCanDeleteSubscrber(t *testing.T) {

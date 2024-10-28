@@ -47,6 +47,24 @@ type Subscriber struct {
 	OptinIP        string                 `json:"optin_ip,omitempty"`
 }
 
+// https://developers.mailerlite.com/docs/subscribers.html#update-a-subscriber
+type MutableSubscriberFields struct {
+	Fields         map[string]interface{} `json:"fields,omitempty"`
+	Groups         []string               `json:"groups,omitempty"`
+	Status         string                 `json:"status,omitempty"`
+	SubscribedAt   string                 `json:"subscribed_at,omitempty"`
+	IPAddress      string                 `json:"ip_address,omitempty"`
+	OptedInAt      string                 `json:"opted_in_at,omitempty"`
+	OptinIP        string                 `json:"optin_ip,omitempty"`
+	UnsubscribedAt string                 `json:"unsubscribed_at,omitempty"`
+}
+
+// https://developers.mailerlite.com/docs/subscribers.html#create-upsert-subscriber
+type CreateSubscriberRequest struct {
+	MutableSubscriberFields
+	Email string `json:"email,omitempty"`
+}
+
 type Fields struct {
 	Name     string `json:"name"`
 	LastName string `json:"last_name"`
@@ -118,8 +136,8 @@ func (s *SubscriberService) Get(ctx context.Context, options *GetSubscriberOptio
 	return root, res, nil
 }
 
-func (s *SubscriberService) Create(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
-	req, err := s.client.newRequest(http.MethodPost, subscriberEndpoint, subscriber)
+func (s *SubscriberService) Create(ctx context.Context, subscriberRequest *CreateSubscriberRequest) (*rootSubscriber, *Response, error) {
+	req, err := s.client.newRequest(http.MethodPost, subscriberEndpoint, subscriberRequest)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -133,14 +151,14 @@ func (s *SubscriberService) Create(ctx context.Context, subscriber *Subscriber) 
 	return root, res, nil
 }
 
-func (s *SubscriberService) Upsert(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
-	return s.Create(ctx, subscriber)
+func (s *SubscriberService) Upsert(ctx context.Context, subscriberRequest *CreateSubscriberRequest) (*rootSubscriber, *Response, error) {
+	return s.Create(ctx, subscriberRequest)
 }
 
-func (s *SubscriberService) Update(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
-	path := fmt.Sprintf("%s/%s", subscriberEndpoint, subscriber.ID)
+func (s *SubscriberService) Update(ctx context.Context, subscriberID string, fields *MutableSubscriberFields) (*rootSubscriber, *Response, error) {
+	path := fmt.Sprintf("%s/%s", subscriberEndpoint, subscriberID)
 
-	req, err := s.client.newRequest(http.MethodPut, path, subscriber)
+	req, err := s.client.newRequest(http.MethodPut, path, fields)
 	if err != nil {
 		return nil, nil, err
 	}
