@@ -8,6 +8,7 @@ MailerLite Golang SDK
 
 - [Installation](#installation)
 - [Usage](#usage)
+    - [Testing](#testing)
     - [Subscribers](#subscribers)
         - [Get a list of subscribers](#get-a-list-of-subscribers)
         - [Get a single subscriber](#get-a-single-subscriber)
@@ -63,6 +64,30 @@ MailerLite Golang SDK
         - [Get a list of timezones](#get-a-list-of-timezones)
     - [Campaign languages](#languages)
         - [Get a list of languages](#get-a-list-of-languages)
+
+## Testing 
+We provide interfaces for all services to help with testing
+
+```go
+type mockSubscriberService struct {
+	mailerlite.SubscriberService
+}
+
+func (m *mockSubscriberService) List(ctx context.Context, options *mailerlite.ListSubscriberOptions) (*mailerlite.RootSubscribers, *mailerlite.Response, error) {
+	return &mailerlite.RootSubscribers{Data: []mailerlite.Subscriber{{Email: "example@example.com"}}}, nil, nil
+}
+
+func TestListSubscribers(t *testing.T) {
+	client := &mailerlite.Client{}
+	client.Subscriber = &mockSubscriberService{}
+
+	ctx := context.Background()
+	result, _, err := client.Subscriber.List(ctx, nil)
+	if err != nil || len(result.Data) == 0 || result.Data[0].Email != "example@example.com" {
+		t.Fatalf("mock failed")
+	}
+}
+```
 
 ## Subscribers
 

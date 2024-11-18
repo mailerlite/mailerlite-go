@@ -8,27 +8,43 @@ import (
 
 const campaignEndpoint = "/campaigns"
 
-type CampaignService service
+// CampaignService defines an interface for campaign-related operations.
+type CampaignService interface {
+	List(ctx context.Context, options *ListCampaignOptions) (*RootCampaigns, *Response, error)
+	Get(ctx context.Context, campaignID string) (*RootCampaign, *Response, error)
+	Create(ctx context.Context, campaign *CreateCampaign) (*RootCampaign, *Response, error)
+	Update(ctx context.Context, campaignID string, campaign *UpdateCampaign) (*RootCampaign, *Response, error)
+	Schedule(ctx context.Context, campaignID string, campaign *ScheduleCampaign) (*RootCampaign, *Response, error)
+	Cancel(ctx context.Context, campaignID string) (*RootCampaign, *Response, error)
+	Subscribers(ctx context.Context, options *ListCampaignSubscriberOptions) (*RootCampaignSubscribers, *Response, error)
+	Languages(ctx context.Context) (*RootCampaignLanguages, *Response, error)
+	Delete(ctx context.Context, campaignID string) (*Response, error)
+}
 
-// rootCampaigns - campaigns response
-type rootCampaigns struct {
+// campaignService implements CampaignService.
+type campaignService struct {
+	*service
+}
+
+// RootCampaigns - campaigns response
+type RootCampaigns struct {
 	Data  []Campaign `json:"data"`
 	Links Links      `json:"links"`
 	Meta  Meta       `json:"meta"`
 }
 
-// rootCampaign - single campaign response
-type rootCampaign struct {
+// RootCampaign - single campaign response
+type RootCampaign struct {
 	Data Campaign `json:"data"`
 }
 
-type rootCampaignSubscribers struct {
+type RootCampaignSubscribers struct {
 	Data  []CampaignSubscriber `json:"data"`
 	Links Links                `json:"links"`
 	Meta  Meta                 `json:"meta"`
 }
 
-type rootCampaignLanguages struct {
+type RootCampaignLanguages struct {
 	Data []CampaignLanguage
 }
 
@@ -123,21 +139,21 @@ type Stats struct {
 	ClickToOpenRate   ClickToOpenRate `json:"click_to_open_rate"`
 }
 
-// ListCampaignOptions - modifies the behavior of CampaignService.List method
+// ListCampaignOptions - modifies the behavior of campaignService.List method
 type ListCampaignOptions struct {
 	Filters *[]Filter `json:"filters,omitempty"`
 	Page    int       `url:"page,omitempty"`
 	Limit   int       `url:"limit,omitempty"`
 }
 
-// GetCampaignOptions - modifies the behavior of CampaignService.Get method
+// GetCampaignOptions - modifies the behavior of campaignService.Get method
 type GetCampaignOptions struct {
 	ID int `json:"id,omitempty"`
 }
 
 type UpdateCampaign CreateCampaign
 
-// CreateCampaign - modifies the behavior of CampaignService.Create method
+// CreateCampaign - modifies the behavior of campaignService.Create method
 type CreateCampaign struct {
 	Name           string          `json:"name"`
 	LanguageID     int             `json:"language_id,omitempty"`
@@ -177,7 +193,7 @@ type ResendSettings struct {
 	BValue         BValue `json:"b_value"`
 }
 
-// ScheduleCampaign - modifies the behavior of CampaignService.Schedule method
+// ScheduleCampaign - modifies the behavior of campaignService.Schedule method
 type ScheduleCampaign struct {
 	Delivery string    `json:"delivery"`
 	Schedule *Schedule `json:"schedule,omitempty"`
@@ -223,13 +239,13 @@ type ListCampaignSubscriberOptions struct {
 }
 
 // List - list of campaigns
-func (s *CampaignService) List(ctx context.Context, options *ListCampaignOptions) (*rootCampaigns, *Response, error) {
+func (s *campaignService) List(ctx context.Context, options *ListCampaignOptions) (*RootCampaigns, *Response, error) {
 	req, err := s.client.newRequest(http.MethodGet, campaignEndpoint, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootCampaigns)
+	root := new(RootCampaigns)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -239,14 +255,14 @@ func (s *CampaignService) List(ctx context.Context, options *ListCampaignOptions
 }
 
 // Get - get a single campaign ID
-func (s *CampaignService) Get(ctx context.Context, campaignID string) (*rootCampaign, *Response, error) {
+func (s *campaignService) Get(ctx context.Context, campaignID string) (*RootCampaign, *Response, error) {
 	path := fmt.Sprintf("%s/%s", campaignEndpoint, campaignID)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootCampaign)
+	root := new(RootCampaign)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -255,13 +271,13 @@ func (s *CampaignService) Get(ctx context.Context, campaignID string) (*rootCamp
 	return root, res, nil
 }
 
-func (s *CampaignService) Create(ctx context.Context, campaign *CreateCampaign) (*rootCampaign, *Response, error) {
+func (s *campaignService) Create(ctx context.Context, campaign *CreateCampaign) (*RootCampaign, *Response, error) {
 	req, err := s.client.newRequest(http.MethodPost, campaignEndpoint, campaign)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootCampaign)
+	root := new(RootCampaign)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -270,14 +286,14 @@ func (s *CampaignService) Create(ctx context.Context, campaign *CreateCampaign) 
 	return root, res, nil
 }
 
-func (s *CampaignService) Update(ctx context.Context, campaignID string, campaign *UpdateCampaign) (*rootCampaign, *Response, error) {
+func (s *campaignService) Update(ctx context.Context, campaignID string, campaign *UpdateCampaign) (*RootCampaign, *Response, error) {
 	path := fmt.Sprintf("%s/%s", campaignEndpoint, campaignID)
 	req, err := s.client.newRequest(http.MethodPut, path, campaign)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootCampaign)
+	root := new(RootCampaign)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -286,14 +302,14 @@ func (s *CampaignService) Update(ctx context.Context, campaignID string, campaig
 	return root, res, nil
 }
 
-func (s *CampaignService) Schedule(ctx context.Context, campaignID string, campaign *ScheduleCampaign) (*rootCampaign, *Response, error) {
+func (s *campaignService) Schedule(ctx context.Context, campaignID string, campaign *ScheduleCampaign) (*RootCampaign, *Response, error) {
 	path := fmt.Sprintf("%s/%s/schedule", campaignEndpoint, campaignID)
 	req, err := s.client.newRequest(http.MethodPost, path, campaign)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootCampaign)
+	root := new(RootCampaign)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -303,14 +319,14 @@ func (s *CampaignService) Schedule(ctx context.Context, campaignID string, campa
 }
 
 // Cancel - cancel a single campaign
-func (s *CampaignService) Cancel(ctx context.Context, campaignID string) (*rootCampaign, *Response, error) {
+func (s *campaignService) Cancel(ctx context.Context, campaignID string) (*RootCampaign, *Response, error) {
 	path := fmt.Sprintf("%s/%s/cancel", campaignEndpoint, campaignID)
 	req, err := s.client.newRequest(http.MethodPost, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootCampaign)
+	root := new(RootCampaign)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -320,7 +336,7 @@ func (s *CampaignService) Cancel(ctx context.Context, campaignID string) (*rootC
 }
 
 // Subscribers - get subscribers activity of a campaign
-func (s *CampaignService) Subscribers(ctx context.Context, options *ListCampaignSubscriberOptions) (*rootCampaignSubscribers, *Response, error) {
+func (s *campaignService) Subscribers(ctx context.Context, options *ListCampaignSubscriberOptions) (*RootCampaignSubscribers, *Response, error) {
 	path := fmt.Sprintf("%s/%s/reports/subscriber-activity", campaignEndpoint, options.CampaignID)
 
 	req, err := s.client.newRequest(http.MethodPost, path, options)
@@ -328,7 +344,7 @@ func (s *CampaignService) Subscribers(ctx context.Context, options *ListCampaign
 		return nil, nil, err
 	}
 
-	root := new(rootCampaignSubscribers)
+	root := new(RootCampaignSubscribers)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -337,14 +353,14 @@ func (s *CampaignService) Subscribers(ctx context.Context, options *ListCampaign
 	return root, res, nil
 }
 
-func (s *CampaignService) Languages(ctx context.Context) (*rootCampaignLanguages, *Response, error) {
+func (s *campaignService) Languages(ctx context.Context) (*RootCampaignLanguages, *Response, error) {
 	path := fmt.Sprintf("%s/languages", campaignEndpoint)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootCampaignLanguages)
+	root := new(RootCampaignLanguages)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -353,7 +369,7 @@ func (s *CampaignService) Languages(ctx context.Context) (*rootCampaignLanguages
 	return root, res, nil
 }
 
-func (s *CampaignService) Delete(ctx context.Context, campaignID string) (*Response, error) {
+func (s *campaignService) Delete(ctx context.Context, campaignID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", campaignEndpoint, campaignID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
