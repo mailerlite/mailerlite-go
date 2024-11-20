@@ -11,7 +11,7 @@ const subscriberEndpoint = "/subscribers"
 // SubscriberService defines an interface for subscriber-related operations.
 type SubscriberService interface {
 	List(ctx context.Context, options *ListSubscriberOptions) (*RootSubscribers, *Response, error)
-	Count(ctx context.Context) (*count, *Response, error)
+	Count(ctx context.Context) (*Count, *Response, error)
 	Get(ctx context.Context, options *GetSubscriberOptions) (*RootSubscriber, *Response, error)
 	Create(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error)
 	Update(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error)
@@ -36,7 +36,7 @@ type RootSubscriber struct {
 	Data Subscriber `json:"data"`
 }
 
-type count struct {
+type Count struct {
 	Total int `json:"total"`
 }
 
@@ -90,14 +90,14 @@ func (s *subscriberService) List(ctx context.Context, options *ListSubscriberOpt
 }
 
 // Count - get a count of subscribers
-func (s *subscriberService) Count(ctx context.Context) (*count, *Response, error) {
+func (s *subscriberService) Count(ctx context.Context) (*Count, *Response, error) {
 	path := fmt.Sprintf("%s?limit=0", subscriberEndpoint)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(count)
+	root := new(Count)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
