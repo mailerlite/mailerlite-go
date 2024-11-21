@@ -132,7 +132,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Print(subscribers.Data.Email)
+	log.Print(subscriber.Data.Email)
 }
 ```
 
@@ -253,7 +253,7 @@ func main() {
 
 	ctx := context.TODO()
 
-	_, _, err := client.Subscriber.Delete(ctx, "subscriber-id")
+	_, err := client.Subscriber.Delete(ctx, "subscriber-id")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -457,7 +457,7 @@ func main() {
 
 	ctx := context.TODO()
 
-	_, _, err := client.Group.UnAssign(ctx, "group-id", "subscriber-id")
+	_, err := client.Group.UnAssign(ctx, "group-id", "subscriber-id")
 	if err != nil {
 		log.Fatal(err)
 	}
