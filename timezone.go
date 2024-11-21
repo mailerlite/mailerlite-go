@@ -7,9 +7,16 @@ import (
 
 const timezoneEndpoint = "/timezones"
 
-type TimezoneService service
+// TimezoneService defines an interface for timezone-related operations.
+type TimezoneService interface {
+	List(ctx context.Context) (*RootTimezones, *Response, error)
+}
 
-type rootTimezones struct {
+type timezoneService struct {
+	*service
+}
+
+type RootTimezones struct {
 	Data []Timezone `json:"data"`
 }
 
@@ -21,13 +28,13 @@ type Timezone struct {
 	Offset        int    `json:"offset"`
 }
 
-func (s *TimezoneService) List(ctx context.Context) (*rootTimezones, *Response, error) {
+func (s *timezoneService) List(ctx context.Context) (*RootTimezones, *Response, error) {
 	req, err := s.client.newRequest(http.MethodGet, timezoneEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootTimezones)
+	root := new(RootTimezones)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

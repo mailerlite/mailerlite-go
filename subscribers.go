@@ -8,21 +8,35 @@ import (
 
 const subscriberEndpoint = "/subscribers"
 
-type SubscriberService service
+// SubscriberService defines an interface for subscriber-related operations.
+type SubscriberService interface {
+	List(ctx context.Context, options *ListSubscriberOptions) (*RootSubscribers, *Response, error)
+	Count(ctx context.Context) (*Count, *Response, error)
+	Get(ctx context.Context, options *GetSubscriberOptions) (*RootSubscriber, *Response, error)
+	Create(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error)
+	Update(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error)
+	Delete(ctx context.Context, subscriberID string) (*Response, error)
+	Forget(ctx context.Context, subscriberID string) (*RootSubscriber, *Response, error)
+}
+
+// subscriberService implements SubscriberService.
+type subscriberService struct {
+	*service
+}
 
 // subscribers - subscribers response
-type rootSubscribers struct {
+type RootSubscribers struct {
 	Data  []Subscriber `json:"data"`
 	Links Links        `json:"links"`
 	Meta  Meta         `json:"meta"`
 }
 
 // subscribers - subscribers response
-type rootSubscriber struct {
+type RootSubscriber struct {
 	Data Subscriber `json:"data"`
 }
 
-type count struct {
+type Count struct {
 	Total int `json:"total"`
 }
 
@@ -47,11 +61,6 @@ type Subscriber struct {
 	OptinIP        string                 `json:"optin_ip,omitempty"`
 }
 
-type Fields struct {
-	Name     string `json:"name"`
-	LastName string `json:"last_name"`
-}
-
 // ListSubscriberOptions - modifies the behavior of SubscriberService.List method
 type ListSubscriberOptions struct {
 	Filters *[]Filter `json:"filters,omitempty"`
@@ -65,13 +74,13 @@ type GetSubscriberOptions struct {
 	Email        string `json:"email,omitempty"`
 }
 
-func (s *SubscriberService) List(ctx context.Context, options *ListSubscriberOptions) (*rootSubscribers, *Response, error) {
+func (s *subscriberService) List(ctx context.Context, options *ListSubscriberOptions) (*RootSubscribers, *Response, error) {
 	req, err := s.client.newRequest(http.MethodGet, subscriberEndpoint, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootSubscribers)
+	root := new(RootSubscribers)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -81,14 +90,14 @@ func (s *SubscriberService) List(ctx context.Context, options *ListSubscriberOpt
 }
 
 // Count - get a count of subscribers
-func (s *SubscriberService) Count(ctx context.Context) (*count, *Response, error) {
+func (s *subscriberService) Count(ctx context.Context) (*Count, *Response, error) {
 	path := fmt.Sprintf("%s?limit=0", subscriberEndpoint)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(count)
+	root := new(Count)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -98,7 +107,7 @@ func (s *SubscriberService) Count(ctx context.Context) (*count, *Response, error
 }
 
 // Get - get a single subscriber by email or ID
-func (s *SubscriberService) Get(ctx context.Context, options *GetSubscriberOptions) (*rootSubscriber, *Response, error) {
+func (s *subscriberService) Get(ctx context.Context, options *GetSubscriberOptions) (*RootSubscriber, *Response, error) {
 	param := options.SubscriberID
 	if options.Email != "" {
 		param = options.Email
@@ -109,7 +118,7 @@ func (s *SubscriberService) Get(ctx context.Context, options *GetSubscriberOptio
 		return nil, nil, err
 	}
 
-	root := new(rootSubscriber)
+	root := new(RootSubscriber)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -118,13 +127,13 @@ func (s *SubscriberService) Get(ctx context.Context, options *GetSubscriberOptio
 	return root, res, nil
 }
 
-func (s *SubscriberService) Create(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
+func (s *subscriberService) Create(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error) {
 	req, err := s.client.newRequest(http.MethodPost, subscriberEndpoint, subscriber)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootSubscriber)
+	root := new(RootSubscriber)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -133,11 +142,11 @@ func (s *SubscriberService) Create(ctx context.Context, subscriber *Subscriber) 
 	return root, res, nil
 }
 
-func (s *SubscriberService) Upsert(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
+func (s *subscriberService) Upsert(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error) {
 	return s.Create(ctx, subscriber)
 }
 
-func (s *SubscriberService) Update(ctx context.Context, subscriber *Subscriber) (*rootSubscriber, *Response, error) {
+func (s *subscriberService) Update(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error) {
 	path := fmt.Sprintf("%s/%s", subscriberEndpoint, subscriber.ID)
 
 	req, err := s.client.newRequest(http.MethodPut, path, subscriber)
@@ -145,7 +154,7 @@ func (s *SubscriberService) Update(ctx context.Context, subscriber *Subscriber) 
 		return nil, nil, err
 	}
 
-	root := new(rootSubscriber)
+	root := new(RootSubscriber)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -154,7 +163,7 @@ func (s *SubscriberService) Update(ctx context.Context, subscriber *Subscriber) 
 	return root, res, nil
 }
 
-func (s *SubscriberService) Delete(ctx context.Context, subscriberID string) (*Response, error) {
+func (s *subscriberService) Delete(ctx context.Context, subscriberID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", subscriberEndpoint, subscriberID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
@@ -170,7 +179,7 @@ func (s *SubscriberService) Delete(ctx context.Context, subscriberID string) (*R
 	return res, nil
 }
 
-func (s *SubscriberService) Forget(ctx context.Context, subscriberID string) (*rootSubscriber, *Response, error) {
+func (s *subscriberService) Forget(ctx context.Context, subscriberID string) (*RootSubscriber, *Response, error) {
 	path := fmt.Sprintf("%s/%s/forget", subscriberEndpoint, subscriberID)
 
 	req, err := s.client.newRequest(http.MethodPost, path, nil)
@@ -178,7 +187,7 @@ func (s *SubscriberService) Forget(ctx context.Context, subscriberID string) (*r
 		return nil, nil, err
 	}
 
-	root := new(rootSubscriber)
+	root := new(RootSubscriber)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

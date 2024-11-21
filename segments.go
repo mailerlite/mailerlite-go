@@ -8,13 +8,24 @@ import (
 
 const segmentEndpoint = "/segments"
 
-type SegmentService service
+// SegmentService defines an interface for segment-related operations.
+type SegmentService interface {
+	List(ctx context.Context, options *ListSegmentOptions) (*RootSegments, *Response, error)
+	Update(ctx context.Context, segmentID, segmentName string) (*RootSegment, *Response, error)
+	Delete(ctx context.Context, segmentID string) (*Response, error)
+	Subscribers(ctx context.Context, options *ListSegmentSubscriberOptions) (*RootSubscribers, *Response, error)
+}
 
-type rootSegment struct {
+// segmentService implements SegmentService.
+type segmentService struct {
+	*service
+}
+
+type RootSegment struct {
 	Data Segment `json:"data"`
 }
 
-type rootSegments struct {
+type RootSegments struct {
 	Data  []Segment `json:"data"`
 	Links Links     `json:"links"`
 	Meta  Meta      `json:"meta"`
@@ -43,13 +54,13 @@ type ListSegmentSubscriberOptions struct {
 	After     int       `url:"after,omitempty"`
 }
 
-func (s *SegmentService) List(ctx context.Context, options *ListSegmentOptions) (*rootSegments, *Response, error) {
+func (s *segmentService) List(ctx context.Context, options *ListSegmentOptions) (*RootSegments, *Response, error) {
 	req, err := s.client.newRequest(http.MethodGet, segmentEndpoint, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootSegments)
+	root := new(RootSegments)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -58,7 +69,7 @@ func (s *SegmentService) List(ctx context.Context, options *ListSegmentOptions) 
 	return root, res, nil
 }
 
-func (s *SegmentService) Update(ctx context.Context, segmentID, segmentName string) (*rootSegment, *Response, error) {
+func (s *segmentService) Update(ctx context.Context, segmentID, segmentName string) (*RootSegment, *Response, error) {
 	body := map[string]interface{}{"name": segmentName}
 	path := fmt.Sprintf("%s/%s", segmentEndpoint, segmentID)
 
@@ -67,7 +78,7 @@ func (s *SegmentService) Update(ctx context.Context, segmentID, segmentName stri
 		return nil, nil, err
 	}
 
-	root := new(rootSegment)
+	root := new(RootSegment)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -76,7 +87,7 @@ func (s *SegmentService) Update(ctx context.Context, segmentID, segmentName stri
 	return root, res, nil
 }
 
-func (s *SegmentService) Delete(ctx context.Context, segmentID string) (*Response, error) {
+func (s *segmentService) Delete(ctx context.Context, segmentID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", segmentEndpoint, segmentID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
@@ -92,7 +103,7 @@ func (s *SegmentService) Delete(ctx context.Context, segmentID string) (*Respons
 	return res, nil
 }
 
-func (s *SegmentService) Subscribers(ctx context.Context, options *ListSegmentSubscriberOptions) (*rootSubscribers, *Response, error) {
+func (s *segmentService) Subscribers(ctx context.Context, options *ListSegmentSubscriberOptions) (*RootSubscribers, *Response, error) {
 	path := fmt.Sprintf("%s/%s/subscribers", segmentEndpoint, options.SegmentID)
 
 	req, err := s.client.newRequest(http.MethodGet, path, options)
@@ -100,7 +111,7 @@ func (s *SegmentService) Subscribers(ctx context.Context, options *ListSegmentSu
 		return nil, nil, err
 	}
 
-	root := new(rootSubscribers)
+	root := new(RootSubscribers)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

@@ -46,15 +46,15 @@ type Client struct {
 
 	common service // common service
 
-	Subscriber *SubscriberService // Subscriber service
-	Group      *GroupService      // Group service
-	Field      *FieldService      // Field service
-	Form       *FormService       // Form service
-	Segment    *SegmentService    // Segment service
-	Webhook    *WebhookService    // Webhook service
-	Campaign   *CampaignService   // Campaign service
-	Automation *AutomationService // Automation service
-	Timezone   *TimezoneService   // Timezone service
+	Subscriber SubscriberService // Subscriber service
+	Group      GroupService      // Group service
+	Field      FieldService      // Field service
+	Form       FormService       // Form service
+	Segment    SegmentService    // Segment service
+	Webhook    WebhookService    // Webhook service
+	Campaign   CampaignService   // Campaign service
+	Automation AutomationService // Automation service
+	Timezone   TimezoneService   // Timezone service
 
 }
 
@@ -113,15 +113,15 @@ func NewClient(apiKey string) *Client {
 	}
 
 	client.common.client = client
-	client.Subscriber = (*SubscriberService)(&client.common)
-	client.Group = (*GroupService)(&client.common)
-	client.Field = (*FieldService)(&client.common)
-	client.Form = (*FormService)(&client.common)
-	client.Segment = (*SegmentService)(&client.common)
-	client.Webhook = (*WebhookService)(&client.common)
-	client.Campaign = (*CampaignService)(&client.common)
-	client.Automation = (*AutomationService)(&client.common)
-	client.Timezone = (*TimezoneService)(&client.common)
+	client.Subscriber = &subscriberService{&client.common}
+	client.Group = &groupService{&client.common}
+	client.Field = &fieldService{&client.common}
+	client.Form = &formService{&client.common}
+	client.Segment = &segmentService{&client.common}
+	client.Webhook = &webhookService{&client.common}
+	client.Campaign = &campaignService{&client.common}
+	client.Automation = &automationService{&client.common}
+	client.Timezone = &timezoneService{&client.common}
 
 	return client
 }

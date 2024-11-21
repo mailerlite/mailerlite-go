@@ -64,6 +64,15 @@ MailerLite Golang SDK
     - [Campaign languages](#languages)
         - [Get a list of languages](#get-a-list-of-languages)
 
+# Installation
+We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
+
+```
+$ go get github.com/mailerlite/mailerlite-go
+```
+
+# Usage
+
 ## Subscribers
 
 ### Get a list of subscribers
@@ -132,7 +141,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Print(subscribers.Data.Email)
+	log.Print(subscriber.Data.Email)
 }
 ```
 
@@ -253,7 +262,7 @@ func main() {
 
 	ctx := context.TODO()
 
-	_, _, err := client.Subscriber.Delete(ctx, "subscriber-id")
+	_, err := client.Subscriber.Delete(ctx, "subscriber-id")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -457,7 +466,7 @@ func main() {
 
 	ctx := context.TODO()
 
-	_, _, err := client.Group.UnAssign(ctx, "group-id", "subscriber-id")
+	_, err := client.Group.UnAssign(ctx, "group-id", "subscriber-id")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -1423,6 +1432,29 @@ func main() {
 ```
 
 # Testing
+
+We provide interfaces for all services to help with testing
+
+```go
+type mockSubscriberService struct {
+	mailerlite.SubscriberService
+}
+
+func (m *mockSubscriberService) List(ctx context.Context, options *mailerlite.ListSubscriberOptions) (*mailerlite.RootSubscribers, *mailerlite.Response, error) {
+	return &mailerlite.RootSubscribers{Data: []mailerlite.Subscriber{{Email: "example@example.com"}}}, nil, nil
+}
+
+func TestListSubscribers(t *testing.T) {
+	client := &mailerlite.Client{}
+	client.Subscriber = &mockSubscriberService{}
+
+	ctx := context.Background()
+	result, _, err := client.Subscriber.List(ctx, nil)
+	if err != nil || len(result.Data) == 0 || result.Data[0].Email != "example@example.com" {
+		t.Fatalf("mock failed")
+	}
+}
+```
 
 [pkg/testing](https://golang.org/pkg/testing/)
 

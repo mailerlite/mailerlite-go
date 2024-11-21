@@ -8,19 +8,28 @@ import (
 
 const automationEndpoint = "/automations"
 
-type AutomationService service
+// AutomationService defines an interface for automation-related operations.
+type AutomationService interface {
+	List(ctx context.Context, options *ListAutomationOptions) (*RootAutomations, *Response, error)
+	Get(ctx context.Context, automationID string) (*RootAutomation, *Response, error)
+	Subscribers(ctx context.Context, options *ListAutomationSubscriberOptions) (*RootAutomationsSubscriber, *Response, error)
+}
 
-type rootAutomation struct {
+type automationService struct {
+	*service
+}
+
+type RootAutomation struct {
 	Data Automation `json:"data"`
 }
 
-type rootAutomations struct {
+type RootAutomations struct {
 	Data  []Automation `json:"data"`
 	Links Links        `json:"links"`
 	Meta  Meta         `json:"meta"`
 }
 
-type rootAutomationsSubscriber struct {
+type RootAutomationsSubscriber struct {
 	Data  []AutomationSubscriber `json:"data"`
 	Links Links                  `json:"links"`
 	Meta  Meta                   `json:"meta"`
@@ -168,13 +177,13 @@ type ListAutomationSubscriberOptions struct {
 	Limit        int       `url:"limit,omitempty"`
 }
 
-func (s *AutomationService) List(ctx context.Context, options *ListAutomationOptions) (*rootAutomations, *Response, error) {
+func (s *automationService) List(ctx context.Context, options *ListAutomationOptions) (*RootAutomations, *Response, error) {
 	req, err := s.client.newRequest(http.MethodGet, automationEndpoint, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootAutomations)
+	root := new(RootAutomations)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -183,14 +192,14 @@ func (s *AutomationService) List(ctx context.Context, options *ListAutomationOpt
 	return root, res, nil
 }
 
-func (s *AutomationService) Get(ctx context.Context, automationID string) (*rootAutomation, *Response, error) {
+func (s *automationService) Get(ctx context.Context, automationID string) (*RootAutomation, *Response, error) {
 	path := fmt.Sprintf("%s/%s", automationEndpoint, automationID)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootAutomation)
+	root := new(RootAutomation)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -199,7 +208,7 @@ func (s *AutomationService) Get(ctx context.Context, automationID string) (*root
 	return root, res, nil
 }
 
-func (s *AutomationService) Subscribers(ctx context.Context, options *ListAutomationSubscriberOptions) (*rootAutomationsSubscriber, *Response, error) {
+func (s *automationService) Subscribers(ctx context.Context, options *ListAutomationSubscriberOptions) (*RootAutomationsSubscriber, *Response, error) {
 	path := fmt.Sprintf("%s/%s/activity", automationEndpoint, options.AutomationID)
 
 	req, err := s.client.newRequest(http.MethodGet, path, options)
@@ -207,7 +216,7 @@ func (s *AutomationService) Subscribers(ctx context.Context, options *ListAutoma
 		return nil, nil, err
 	}
 
-	root := new(rootAutomationsSubscriber)
+	root := new(RootAutomationsSubscriber)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

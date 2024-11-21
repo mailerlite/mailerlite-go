@@ -8,13 +8,25 @@ import (
 
 const formEndpoint = "/forms"
 
-type FormService service
+// FormService defines an interface for form-related operations.
+type FormService interface {
+	List(ctx context.Context, options *ListFormOptions) (*RootForms, *Response, error)
+	Get(ctx context.Context, formID string) (*RootForm, *Response, error)
+	Update(ctx context.Context, formID, formName string) (*RootForm, *Response, error)
+	Delete(ctx context.Context, formID string) (*Response, error)
+	Subscribers(ctx context.Context, options *ListFormSubscriberOptions) (*RootSubscribers, *Response, error)
+}
 
-type rootForm struct {
+// formService implements FormsService.
+type formService struct {
+	*service
+}
+
+type RootForm struct {
 	Data Form `json:"data"`
 }
 
-type rootForms struct {
+type RootForms struct {
 	Data  []Form `json:"data"`
 	Links Links  `json:"links"`
 	Meta  Meta   `json:"meta"`
@@ -67,14 +79,14 @@ type ListFormSubscriberOptions struct {
 	Limit   int       `url:"limit,omitempty"`
 }
 
-func (s *FormService) List(ctx context.Context, options *ListFormOptions) (*rootForms, *Response, error) {
+func (s *formService) List(ctx context.Context, options *ListFormOptions) (*RootForms, *Response, error) {
 	path := fmt.Sprintf("%s/%s", formEndpoint, options.Type)
 	req, err := s.client.newRequest(http.MethodGet, path, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootForms)
+	root := new(RootForms)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -83,14 +95,14 @@ func (s *FormService) List(ctx context.Context, options *ListFormOptions) (*root
 	return root, res, nil
 }
 
-func (s *FormService) Get(ctx context.Context, formID string) (*rootForm, *Response, error) {
+func (s *formService) Get(ctx context.Context, formID string) (*RootForm, *Response, error) {
 	path := fmt.Sprintf("%s/%s", formEndpoint, formID)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootForm)
+	root := new(RootForm)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -99,7 +111,7 @@ func (s *FormService) Get(ctx context.Context, formID string) (*rootForm, *Respo
 	return root, res, nil
 }
 
-func (s *FormService) Update(ctx context.Context, formID, formName string) (*rootForm, *Response, error) {
+func (s *formService) Update(ctx context.Context, formID, formName string) (*RootForm, *Response, error) {
 	body := map[string]interface{}{"name": formName}
 	path := fmt.Sprintf("%s/%s", formEndpoint, formID)
 
@@ -108,7 +120,7 @@ func (s *FormService) Update(ctx context.Context, formID, formName string) (*roo
 		return nil, nil, err
 	}
 
-	root := new(rootForm)
+	root := new(RootForm)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -117,7 +129,7 @@ func (s *FormService) Update(ctx context.Context, formID, formName string) (*roo
 	return root, res, nil
 }
 
-func (s *FormService) Delete(ctx context.Context, formID string) (*Response, error) {
+func (s *formService) Delete(ctx context.Context, formID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", formEndpoint, formID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
@@ -133,7 +145,7 @@ func (s *FormService) Delete(ctx context.Context, formID string) (*Response, err
 	return res, nil
 }
 
-func (s *FormService) Subscribers(ctx context.Context, options *ListFormSubscriberOptions) (*rootSubscribers, *Response, error) {
+func (s *formService) Subscribers(ctx context.Context, options *ListFormSubscriberOptions) (*RootSubscribers, *Response, error) {
 	path := fmt.Sprintf("%s/%s/subscribers", formEndpoint, options.FormID)
 
 	req, err := s.client.newRequest(http.MethodGet, path, options)
@@ -141,7 +153,7 @@ func (s *FormService) Subscribers(ctx context.Context, options *ListFormSubscrib
 		return nil, nil, err
 	}
 
-	root := new(rootSubscribers)
+	root := new(RootSubscribers)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

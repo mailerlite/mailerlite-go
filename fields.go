@@ -8,13 +8,24 @@ import (
 
 const fieldEndpoint = "/fields"
 
-type FieldService service
+// FieldService defines an interface for field-related operations.
+type FieldService interface {
+	List(ctx context.Context, options *ListFieldOptions) (*RootFields, *Response, error)
+	Create(ctx context.Context, fieldName, fieldType string) (*RootField, *Response, error)
+	Update(ctx context.Context, fieldID, fieldName string) (*RootField, *Response, error)
+	Delete(ctx context.Context, fieldID string) (*Response, error)
+}
 
-type rootField struct {
+// fieldService implements FieldService.
+type fieldService struct {
+	*service
+}
+
+type RootField struct {
 	Data Field `json:"data"`
 }
 
-type rootFields struct {
+type RootFields struct {
 	Data  []Field `json:"data"`
 	Links Links   `json:"links"`
 	Meta  Meta    `json:"meta"`
@@ -35,13 +46,13 @@ type ListFieldOptions struct {
 	Sort    string    `url:"sort,omitempty"`
 }
 
-func (s *FieldService) List(ctx context.Context, options *ListFieldOptions) (*rootFields, *Response, error) {
+func (s *fieldService) List(ctx context.Context, options *ListFieldOptions) (*RootFields, *Response, error) {
 	req, err := s.client.newRequest(http.MethodGet, fieldEndpoint, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootFields)
+	root := new(RootFields)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -50,7 +61,7 @@ func (s *FieldService) List(ctx context.Context, options *ListFieldOptions) (*ro
 	return root, res, nil
 }
 
-func (s *FieldService) Create(ctx context.Context, fieldName, fieldType string) (*rootField, *Response, error) {
+func (s *fieldService) Create(ctx context.Context, fieldName, fieldType string) (*RootField, *Response, error) {
 	body := map[string]interface{}{
 		"name": fieldName,
 		"type": fieldType,
@@ -60,7 +71,7 @@ func (s *FieldService) Create(ctx context.Context, fieldName, fieldType string) 
 		return nil, nil, err
 	}
 
-	root := new(rootField)
+	root := new(RootField)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -69,7 +80,7 @@ func (s *FieldService) Create(ctx context.Context, fieldName, fieldType string) 
 	return root, res, nil
 }
 
-func (s *FieldService) Update(ctx context.Context, fieldID, fieldName string) (*rootField, *Response, error) {
+func (s *fieldService) Update(ctx context.Context, fieldID, fieldName string) (*RootField, *Response, error) {
 	body := map[string]interface{}{"name": fieldName}
 	path := fmt.Sprintf("%s/%s", fieldEndpoint, fieldID)
 
@@ -78,7 +89,7 @@ func (s *FieldService) Update(ctx context.Context, fieldID, fieldName string) (*
 		return nil, nil, err
 	}
 
-	root := new(rootField)
+	root := new(RootField)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -87,7 +98,7 @@ func (s *FieldService) Update(ctx context.Context, fieldID, fieldName string) (*
 	return root, res, nil
 }
 
-func (s *FieldService) Delete(ctx context.Context, fieldID string) (*Response, error) {
+func (s *fieldService) Delete(ctx context.Context, fieldID string) (*Response, error) {
 	path := fmt.Sprintf("%s/%s", fieldEndpoint, fieldID)
 
 	req, err := s.client.newRequest(http.MethodDelete, path, nil)
