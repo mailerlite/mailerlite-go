@@ -11,9 +11,9 @@ const webhookEndpoint = "/webhooks"
 // WebhookService defines an interface for webhook-related operations.
 type WebhookService interface {
 	List(ctx context.Context, options *ListWebhookOptions) (*RootWebhooks, *Response, error)
-	Get(ctx context.Context, webhookID string) (*rootWebhook, *Response, error)
-	Create(ctx context.Context, webhook *CreateWebhookOptions) (*rootWebhook, *Response, error)
-	Update(ctx context.Context, webhook *UpdateWebhookOptions) (*rootWebhook, *Response, error)
+	Get(ctx context.Context, webhookID string) (*RootWebhook, *Response, error)
+	Create(ctx context.Context, webhook *CreateWebhookOptions) (*RootWebhook, *Response, error)
+	Update(ctx context.Context, webhook *UpdateWebhookOptions) (*RootWebhook, *Response, error)
 	Delete(ctx context.Context, webhookID string) (*Response, error)
 }
 
@@ -22,7 +22,7 @@ type webhookService struct {
 	*service
 }
 
-type rootWebhook struct {
+type RootWebhook struct {
 	Data Webhook `json:"data"`
 }
 
@@ -81,14 +81,14 @@ func (s *webhookService) List(ctx context.Context, options *ListWebhookOptions) 
 	return root, res, nil
 }
 
-func (s *webhookService) Get(ctx context.Context, webhookID string) (*rootWebhook, *Response, error) {
+func (s *webhookService) Get(ctx context.Context, webhookID string) (*RootWebhook, *Response, error) {
 	path := fmt.Sprintf("%s/%s", webhookEndpoint, webhookID)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootWebhook)
+	root := new(RootWebhook)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -97,13 +97,13 @@ func (s *webhookService) Get(ctx context.Context, webhookID string) (*rootWebhoo
 	return root, res, nil
 }
 
-func (s *webhookService) Create(ctx context.Context, options *CreateWebhookOptions) (*rootWebhook, *Response, error) {
+func (s *webhookService) Create(ctx context.Context, options *CreateWebhookOptions) (*RootWebhook, *Response, error) {
 	req, err := s.client.newRequest(http.MethodPost, webhookEndpoint, options)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	root := new(rootWebhook)
+	root := new(RootWebhook)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
@@ -112,7 +112,7 @@ func (s *webhookService) Create(ctx context.Context, options *CreateWebhookOptio
 	return root, res, nil
 }
 
-func (s *webhookService) Update(ctx context.Context, options *UpdateWebhookOptions) (*rootWebhook, *Response, error) {
+func (s *webhookService) Update(ctx context.Context, options *UpdateWebhookOptions) (*RootWebhook, *Response, error) {
 	path := fmt.Sprintf("%s/%s", webhookEndpoint, options.WebhookID)
 
 	req, err := s.client.newRequest(http.MethodPut, path, options)
@@ -120,7 +120,7 @@ func (s *webhookService) Update(ctx context.Context, options *UpdateWebhookOptio
 		return nil, nil, err
 	}
 
-	root := new(rootWebhook)
+	root := new(RootWebhook)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
