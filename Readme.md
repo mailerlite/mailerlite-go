@@ -64,6 +64,15 @@ MailerLite Golang SDK
     - [Campaign languages](#languages)
         - [Get a list of languages](#get-a-list-of-languages)
 
+# Installation
+We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
+
+```
+$ go get github.com/mailerlite/mailerlite-go
+```
+
+# Usage
+
 ## Subscribers
 
 ### Get a list of subscribers
