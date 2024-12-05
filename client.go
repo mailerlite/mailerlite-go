@@ -32,8 +32,7 @@ const (
 
 // Client - base api client
 type Client struct {
-	clientMu sync.Mutex   // clientMu protects the client during calls that modify the CheckRedirect func.
-	client   *http.Client // HTTP client used to communicate with the API.
+	client *http.Client // HTTP client used to communicate with the API.
 
 	apiBase    *url.URL // apiBase the base used when communicating with the API.
 	apiVersion string   // apiVersion the version used when communicating with the API.
@@ -181,6 +180,15 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 
 func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*Response, error) {
 	req = req.WithContext(ctx)
+
+	// If we've hit rate limit, don't make further requests before Reset time.
+	if err := c.checkRateLimitBeforeDo(req); err != nil {
+		return &Response{
+			Response: err.Response,
+			Rate:     err.Rate,
+		}, err
+	}
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		select {
@@ -192,6 +200,10 @@ func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*Res
 	}
 
 	response := newResponse(resp)
+
+	c.rateMu.Lock()
+	c.rateLimits = response.Rate
+	c.rateMu.Unlock()
 
 	err = checkResponse(resp)
 	if err != nil {
@@ -207,6 +219,33 @@ func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*Res
 	}
 
 	return response, err
+}
+
+// checkRateLimitBeforeDo does not make any network calls, but uses existing knowledge from
+// current client state in order to quickly check if *RateLimitError can be immediately returned
+// from Client.do, and if so, returns it so that Client.do can skip making a network API call unnecessarily.
+// Otherwise it returns nil, and Client.do should proceed normally.
+func (c *Client) checkRateLimitBeforeDo(req *http.Request) *RateLimitError {
+	c.rateMu.Lock()
+	rate := c.rateLimits
+	c.rateMu.Unlock()
+	if rate.Remaining == 0 && rate.RetryAfter != nil && time.Now().Before(time.Now().Add(*rate.RetryAfter)) {
+		// Create a fake response.
+		resp := &http.Response{
+			Status:     http.StatusText(http.StatusForbidden),
+			StatusCode: http.StatusForbidden,
+			Request:    req,
+			Header:     make(http.Header),
+			Body:       io.NopCloser(strings.NewReader("")),
+		}
+		return &RateLimitError{
+			Rate:     rate,
+			Response: resp,
+			Message:  fmt.Sprintf("API rate limit of %v still exceeded until %v, not making remote request.", rate.Limit, rate.RetryAfter),
+		}
+	}
+
+	return nil
 }
 
 // newResponse creates a new Response for the provided http.Response.

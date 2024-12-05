@@ -345,3 +345,51 @@ func TestWillHandleAPIRateError(t *testing.T) {
 	assert.Equal(t, "GET https://connect.mailerlite.com/api/subscribers: 429 Too Many Attempts. [retry after 59s]", err.Error())
 
 }
+
+func TestWillHandleAPIRateErrorAndNoRemoteCall(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	header := http.Header{}
+	header.Set(mailerlite.HeaderRateLimit, "120")
+	header.Set(mailerlite.HeaderRateRemaining, "0")
+	header.Set(mailerlite.HeaderRateRetryAfter, "59")
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		res := &http.Response{
+			StatusCode: http.StatusTooManyRequests,
+			Request:    req,
+			Header:     header,
+			Body:       io.NopCloser(strings.NewReader(`{"message": "Too Many Attempts."}`)),
+		}
+
+		return res
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	listOptions := &mailerlite.ListSubscriberOptions{}
+
+	_, res, err := client.Subscriber.List(ctx, listOptions)
+
+	assert.Equal(t, http.StatusTooManyRequests, res.StatusCode)
+	assert.IsType(t, &mailerlite.RateLimitError{}, err)
+
+	retryAfter := time.Duration(59) * time.Second
+
+	if err, ok := err.(*mailerlite.RateLimitError); ok {
+		assert.Equal(t, "Too Many Attempts.", err.Message)
+		assert.Equal(t, 0, err.Rate.Remaining)
+		assert.Equal(t, &retryAfter, err.Rate.RetryAfter)
+	}
+
+	assert.Equal(t, "GET https://connect.mailerlite.com/api/subscribers: 429 Too Many Attempts. [retry after 59s]", err.Error())
+
+	_, res, err = client.Subscriber.List(ctx, listOptions)
+	assert.Equal(t, http.StatusForbidden, res.StatusCode)
+	assert.IsType(t, &mailerlite.RateLimitError{}, err)
+
+	assert.Equal(t, "GET https://connect.mailerlite.com/api/subscribers: 403 API rate limit of 120 still exceeded until 59s, not making remote request. [retry after 59s]", err.Error())
+
+}
