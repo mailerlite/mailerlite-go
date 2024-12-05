@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/mailerlite/mailerlite-go"
@@ -160,6 +161,37 @@ func TestCanForgetSubscrber(t *testing.T) {
 	client.SetHttpClient(testClient)
 
 	_, res, err := client.Subscriber.Forget(ctx, "1234")
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+}
+
+func TestCanCreateSubscrberWithGroup(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.Method, http.MethodPost)
+		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers")
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, strings.TrimRight(string(b), "\r\n"), `{"email":"test@test.com","groups":[{"id":"1234","name":"","active_count":0,"sent_count":0,"opens_count":0,"open_rate":{"float":0,"string":""},"clicks_count":0,"click_rate":{"float":0,"string":""},"unsubscribed_count":0,"unconfirmed_count":0,"bounced_count":0,"junk_count":0,"created_at":""}]}`)
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+		}
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	options := &mailerlite.Subscriber{
+		Email:  "test@test.com",
+		Groups: []mailerlite.Group{{ID: "1234"}},
+	}
+
+	_, res, err := client.Subscriber.Create(ctx, options)
 	if err != nil {
 		return
 	}
