@@ -173,7 +173,7 @@ func main() {
 }
 ```
 
-### Create a subscriber
+### Create/Upsert a subscriber
 
 ```go
 package main
@@ -192,14 +192,14 @@ func main() {
 
 	ctx := context.TODO()
 
-	subscriber := &mailerlite.Subscriber{
+	subscriber := &mailerlite.UpsertSubscriber{
 		Email: "example@example.com",
 		Fields: map[string]interface{}{
 			"city": "Vilnius",
 		},
 	}
 
-	newSubscriber, _, err := client.Subscriber.Create(ctx, subscriber)
+	newSubscriber, _, err := client.Subscriber.Upsert(ctx, subscriber)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -227,14 +227,15 @@ func main() {
 
 	ctx := context.TODO()
 
-	subscriber := &mailerlite.Subscriber{
+	subscriber := &mailerlite.UpdateSubscriber{
+		ID: "1",
 		Email: "example@example.com",
 		Fields: map[string]interface{}{
 			"company": "MailerLite",
 		},
 	}
 
-	newSubscriber, _, err := client.Subscriber.Create(ctx, subscriber)
+	newSubscriber, _, err := client.Subscriber.Update(ctx, subscriber)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -168,7 +168,7 @@ func TestCanForgetSubscrber(t *testing.T) {
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 }
 
-func TestCanCreateSubscrberWithGroup(t *testing.T) {
+func TestCanCreateSubscrberWithGroupDeprecated(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
 	testClient := NewTestClient(func(req *http.Request) *http.Response {
@@ -192,6 +192,69 @@ func TestCanCreateSubscrberWithGroup(t *testing.T) {
 	}
 
 	_, res, err := client.Subscriber.Create(ctx, options)
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+}
+
+func TestCanUpsertSubscrberWithGroup(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.Method, http.MethodPost)
+		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers")
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, strings.TrimRight(string(b), "\r\n"), `{"email":"test@test.com","groups":["1234"]}`)
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+		}
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	options := &mailerlite.UpsertSubscriber{
+		Email:  "test@test.com",
+		Groups: []string{"1234"},
+	}
+
+	_, res, err := client.Subscriber.Upsert(ctx, options)
+	if err != nil {
+		return
+	}
+
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+}
+
+func TestCanUpdateSubscrberWithGroup(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, req.Method, http.MethodPut)
+		assert.Equal(t, req.URL.String(), "https://connect.mailerlite.com/api/subscribers/1")
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, strings.TrimRight(string(b), "\r\n"), `{"id":"1","email":"test@test.com","groups":["1234"]}`)
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
+		}
+	})
+
+	ctx := context.TODO()
+
+	client.SetHttpClient(testClient)
+
+	options := &mailerlite.UpdateSubscriber{
+		ID:     "1",
+		Email:  "test@test.com",
+		Groups: []string{"1234"},
+	}
+
+	_, res, err := client.Subscriber.Update(ctx, options)
 	if err != nil {
 		return
 	}
