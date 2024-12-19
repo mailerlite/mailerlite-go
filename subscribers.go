@@ -13,8 +13,9 @@ type SubscriberService interface {
 	List(ctx context.Context, options *ListSubscriberOptions) (*RootSubscribers, *Response, error)
 	Count(ctx context.Context) (*Count, *Response, error)
 	Get(ctx context.Context, options *GetSubscriberOptions) (*RootSubscriber, *Response, error)
-	Create(ctx context.Context, subscriber *SubscriberToCreate) (*RootSubscriber, *Response, error)
-	Update(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error)
+	Create(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error)
+	Upsert(ctx context.Context, subscriber *UpsertSubscriber) (*RootSubscriber, *Response, error)
+	Update(ctx context.Context, subscriber *UpdateSubscriber) (*RootSubscriber, *Response, error)
 	Delete(ctx context.Context, subscriberID string) (*Response, error)
 	Forget(ctx context.Context, subscriberID string) (*RootSubscriber, *Response, error)
 }
@@ -61,7 +62,10 @@ type Subscriber struct {
 	OptinIP        string                 `json:"optin_ip,omitempty"`
 }
 
-type SubscriberToCreate struct {
+type UpdateSubscriber UpsertSubscriber
+
+type UpsertSubscriber struct {
+	ID             string                 `json:"id,omitempty"`
 	Email          string                 `json:"email,omitempty"`
 	Status         string                 `json:"status,omitempty"`
 	IPAddress      interface{}            `json:"ip_address,omitempty"`
@@ -139,7 +143,8 @@ func (s *subscriberService) Get(ctx context.Context, options *GetSubscriberOptio
 	return root, res, nil
 }
 
-func (s *subscriberService) Create(ctx context.Context, subscriber *SubscriberToCreate) (*RootSubscriber, *Response, error) {
+// Deprecated: use Upsert instead
+func (s *subscriberService) Create(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error) {
 	req, err := s.client.newRequest(http.MethodPost, subscriberEndpoint, subscriber)
 	if err != nil {
 		return nil, nil, err
@@ -154,11 +159,22 @@ func (s *subscriberService) Create(ctx context.Context, subscriber *SubscriberTo
 	return root, res, nil
 }
 
-func (s *subscriberService) Upsert(ctx context.Context, subscriber *SubscriberToCreate) (*RootSubscriber, *Response, error) {
-	return s.Create(ctx, subscriber)
+func (s *subscriberService) Upsert(ctx context.Context, subscriber *UpsertSubscriber) (*RootSubscriber, *Response, error) {
+	req, err := s.client.newRequest(http.MethodPost, subscriberEndpoint, subscriber)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootSubscriber)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *subscriberService) Update(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error) {
+func (s *subscriberService) Update(ctx context.Context, subscriber *UpdateSubscriber) (*RootSubscriber, *Response, error) {
 	path := fmt.Sprintf("%s/%s", subscriberEndpoint, subscriber.ID)
 
 	req, err := s.client.newRequest(http.MethodPut, path, subscriber)
