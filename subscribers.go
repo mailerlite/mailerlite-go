@@ -13,6 +13,7 @@ type SubscriberService interface {
 	List(ctx context.Context, options *ListSubscriberOptions) (*RootSubscribers, *Response, error)
 	Count(ctx context.Context) (*Count, *Response, error)
 	Get(ctx context.Context, options *GetSubscriberOptions) (*RootSubscriber, *Response, error)
+	// Deprecated: use Upsert instead (https://github.com/mailerlite/mailerlite-go/issues/17)
 	Create(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error)
 	Upsert(ctx context.Context, subscriber *UpsertSubscriber) (*RootSubscriber, *Response, error)
 	Update(ctx context.Context, subscriber *UpdateSubscriber) (*RootSubscriber, *Response, error)
@@ -143,7 +144,7 @@ func (s *subscriberService) Get(ctx context.Context, options *GetSubscriberOptio
 	return root, res, nil
 }
 
-// Deprecated: use Upsert instead
+// Deprecated: use Upsert instead (https://github.com/mailerlite/mailerlite-go/issues/17)
 func (s *subscriberService) Create(ctx context.Context, subscriber *Subscriber) (*RootSubscriber, *Response, error) {
 	req, err := s.client.newRequest(http.MethodPost, subscriberEndpoint, subscriber)
 	if err != nil {
