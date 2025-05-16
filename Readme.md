@@ -12,7 +12,7 @@ MailerLite Golang SDK
         - [Get a list of subscribers](#get-a-list-of-subscribers)
         - [Get a single subscriber](#get-a-single-subscriber)
         - [Count all subscribers](#count-all-subscribers)
-        - [Create a subscriber](#create-a-subscriber)
+        - [Create a subscriber](#createupsert-a-subscriber)
         - [Update a subscriber](#update-a-subscriber)
         - [Delete a subscriber](#delete-a-subscriber)
     - [Groups](#groups)
