@@ -3,7 +3,7 @@ module github.com/mailerlite/mailerlite-go
 go 1.18
 
 require (
-	github.com/google/go-querystring v1.1.0
+	github.com/google/go-querystring v1.2.0
 	github.com/stretchr/testify v1.10.0
 )
 
