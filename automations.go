@@ -70,7 +70,7 @@ type Step struct {
 	NoStepId            string       `json:"no_step_id,omitempty"`
 	Broken              bool         `json:"broken"`
 	UpdatedAt           string       `json:"updated_at"`
-	Value               string       `json:"value,omitempty"`
+	Value               interface{}  `json:"value,omitempty"`
 	MatchingType        string       `json:"matching_type,omitempty"`
 	Description         string       `json:"description"`
 	Name                string       `json:"name,omitempty"`

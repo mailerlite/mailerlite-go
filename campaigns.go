@@ -86,9 +86,9 @@ type Campaign struct {
 }
 
 type CampaignSettings struct {
-	TrackOpens         string `json:"track_opens"`
-	UseGoogleAnalytics string `json:"use_google_analytics"`
-	EcommerceTracking  string `json:"ecommerce_tracking"`
+	TrackOpens         bool `json:"track_opens"`
+	UseGoogleAnalytics bool `json:"use_google_analytics"`
+	EcommerceTracking  bool `json:"ecommerce_tracking"`
 }
 
 type CampaignFilter struct {
