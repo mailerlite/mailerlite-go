@@ -67,6 +67,10 @@ type Meta struct {
 
 	Total           int `json:"total"`
 	TotalUnfiltered int `json:"total_unfiltered,omitempty"`
+
+	// cursor based string pagination (subscribers)
+	NextCursor string `json:"next_cursor,omitempty"`
+	PrevCursor string `json:"prev_cursor,omitempty"`
 }
 
 type Aggregations struct {

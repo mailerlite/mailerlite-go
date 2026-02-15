@@ -81,7 +81,7 @@ type UpsertSubscriber struct {
 // ListSubscriberOptions - modifies the behavior of SubscriberService.List method
 type ListSubscriberOptions struct {
 	Filters *[]Filter `json:"filters,omitempty"`
-	Page    int       `url:"page,omitempty"`
+	Cursor  string    `url:"cursor,omitempty"`
 	Limit   int       `url:"limit,omitempty"`
 }
 
