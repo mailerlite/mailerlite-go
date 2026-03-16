@@ -19,6 +19,8 @@ type SubscriberService interface {
 	Update(ctx context.Context, subscriber *UpdateSubscriber) (*RootSubscriber, *Response, error)
 	Delete(ctx context.Context, subscriberID string) (*Response, error)
 	Forget(ctx context.Context, subscriberID string) (*RootSubscriber, *Response, error)
+	ActivityLog(ctx context.Context, options *ListActivityOptions) (*RootActivityLog, *Response, error)
+	GetImport(ctx context.Context, importID string) (*RootImport, *Response, error)
 }
 
 // subscriberService implements SubscriberService.
@@ -89,6 +91,58 @@ type ListSubscriberOptions struct {
 type GetSubscriberOptions struct {
 	SubscriberID string `json:"id,omitempty"`
 	Email        string `json:"email,omitempty"`
+}
+
+// ListActivityOptions - modifies the behavior of SubscriberService.ActivityLog method
+type ListActivityOptions struct {
+	SubscriberID string    `url:"-"`
+	Filters      *[]Filter `json:"filters,omitempty"`
+	Page         int       `url:"page,omitempty"`
+	Limit        int       `url:"limit,omitempty"`
+}
+
+type RootActivityLog struct {
+	Data  []ActivityEntry `json:"data"`
+	Links Links           `json:"links"`
+	Meta  Meta            `json:"meta"`
+}
+
+type ActivityEntry struct {
+	ID          string                 `json:"id"`
+	LogName     string                 `json:"log_name"`
+	SubjectID   string                 `json:"subject_id"`
+	SubjectType string                 `json:"subject_type"`
+	Properties  map[string]interface{} `json:"properties"`
+}
+
+type RootImport struct {
+	Data Import `json:"data"`
+}
+
+type Import struct {
+	ID                      string      `json:"id"`
+	Total                   int         `json:"total"`
+	Processed               int         `json:"processed"`
+	Imported                int         `json:"imported"`
+	Updated                 int         `json:"updated"`
+	Errored                 int         `json:"errored"`
+	Percent                 int         `json:"percent"`
+	Done                    bool        `json:"done"`
+	FilePath                string      `json:"file_path"`
+	InvalidCount            int         `json:"invalid_count"`
+	MistypedCount           int         `json:"mistyped_count"`
+	ChangedCount            int         `json:"changed_count"`
+	UnchangedCount          int         `json:"unchanged_count"`
+	UnsubscribedCount       int         `json:"unsubscribed_count"`
+	RoleBasedCount          int         `json:"role_based_count"`
+	BannedImportEmailsCount int         `json:"banned_import_emails_count"`
+	MatchRoute              string      `json:"match_route"`
+	SourceLabel             string      `json:"source_label"`
+	UpdatedAt               string      `json:"updated_at"`
+	UndoneAt                interface{} `json:"undone_at"`
+	StoppedAt               interface{} `json:"stopped_at"`
+	UndoStartedAt           interface{} `json:"undo_started_at"`
+	FinishedAt              string      `json:"finished_at"`
 }
 
 func (s *subscriberService) List(ctx context.Context, options *ListSubscriberOptions) (*RootSubscribers, *Response, error) {
@@ -217,6 +271,40 @@ func (s *subscriberService) Forget(ctx context.Context, subscriberID string) (*R
 	}
 
 	root := new(RootSubscriber)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+func (s *subscriberService) ActivityLog(ctx context.Context, options *ListActivityOptions) (*RootActivityLog, *Response, error) {
+	path := fmt.Sprintf("%s/%s/activity-log", subscriberEndpoint, options.SubscriberID)
+
+	req, err := s.client.newRequest(http.MethodGet, path, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootActivityLog)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+func (s *subscriberService) GetImport(ctx context.Context, importID string) (*RootImport, *Response, error) {
+	path := fmt.Sprintf("%s/import/%s", subscriberEndpoint, importID)
+
+	req, err := s.client.newRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootImport)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
