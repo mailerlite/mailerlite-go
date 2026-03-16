@@ -1219,10 +1219,20 @@ func main() {
 
 	listOptions := &mailerlite.ListCampaignSubscriberOptions{
 		CampaignID: "campaign-id",
-		Page:       1,
-		Limit:      10,
+		Filters: &[]mailerlite.Filter{
+			{
+				Name:  "type",
+				Value: "opened",
+			},
+			{
+				Name:  "search",
+				Value: "subscriber@example.com",
+			},
+		},
+		Page:  1,
+		Limit: 10,
 	}
-	
+
 	_, _, err := client.Campaign.Subscribers(ctx, listOptions)
 	if err != nil {
 		log.Fatal(err)
