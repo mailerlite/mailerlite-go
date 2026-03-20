@@ -13,6 +13,8 @@ type AutomationService interface {
 	List(ctx context.Context, options *ListAutomationOptions) (*RootAutomations, *Response, error)
 	Get(ctx context.Context, automationID string) (*RootAutomation, *Response, error)
 	Subscribers(ctx context.Context, options *ListAutomationSubscriberOptions) (*RootAutomationsSubscriber, *Response, error)
+	Create(ctx context.Context, automationName string) (*RootAutomation, *Response, error)
+	Delete(ctx context.Context, automationID string) (*Response, error)
 }
 
 type automationService struct {
@@ -223,4 +225,36 @@ func (s *automationService) Subscribers(ctx context.Context, options *ListAutoma
 	}
 
 	return root, res, nil
+}
+
+func (s *automationService) Create(ctx context.Context, automationName string) (*RootAutomation, *Response, error) {
+	body := map[string]interface{}{"name": automationName}
+	req, err := s.client.newRequest(http.MethodPost, automationEndpoint, body)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootAutomation)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+func (s *automationService) Delete(ctx context.Context, automationID string) (*Response, error) {
+	path := fmt.Sprintf("%s/%s", automationEndpoint, automationID)
+
+	req, err := s.client.newRequest(http.MethodDelete, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := s.client.do(ctx, req, nil)
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
 }

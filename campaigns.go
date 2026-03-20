@@ -236,6 +236,7 @@ type ListCampaignSubscriberOptions struct {
 	Page       int       `url:"page,omitempty"`
 	Sort       string    `url:"sort,omitempty"`
 	Limit      int       `url:"limit,omitempty"`
+	Include    string    `url:"include,omitempty"`
 }
 
 // List - list of campaigns
@@ -339,7 +340,7 @@ func (s *campaignService) Cancel(ctx context.Context, campaignID string) (*RootC
 func (s *campaignService) Subscribers(ctx context.Context, options *ListCampaignSubscriberOptions) (*RootCampaignSubscribers, *Response, error) {
 	path := fmt.Sprintf("%s/%s/reports/subscriber-activity", campaignEndpoint, options.CampaignID)
 
-	req, err := s.client.newRequest(http.MethodPost, path, options)
+	req, err := s.client.newRequest(http.MethodGet, path, options)
 	if err != nil {
 		return nil, nil, err
 	}

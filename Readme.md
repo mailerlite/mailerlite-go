@@ -15,6 +15,8 @@ MailerLite Golang SDK
         - [Create a subscriber](#createupsert-a-subscriber)
         - [Update a subscriber](#update-a-subscriber)
         - [Delete a subscriber](#delete-a-subscriber)
+        - [Fetch subscriber activity](#fetch-subscriber-activity)
+        - [Get single import](#get-single-import)
     - [Groups](#groups)
         - [Get a list of groups](#get-a-list-of-groups)
         - [Create a group](#create-a-group)
@@ -22,6 +24,8 @@ MailerLite Golang SDK
         - [Delete a group](#delete-a-group)
         - [Get subscribers belonging to a group](#get-subscribers-belonging-to-a-group)
         - [Assign subscriber to a group](#assign-subscribers-to-a-group)
+        - [Unassign subscriber from a group](#unassign-subscriber-from-a-group)
+        - [Import subscribers to a group](#import-subscribers-to-a-group)
     - [Segments](#segments)
         - [Get a list of segments](#get-a-list-of-segments)
         - [Update a segment](#update-a-segment)
@@ -36,6 +40,8 @@ MailerLite Golang SDK
         - [Get a list of automations](#get-a-list-of-automations)
         - [Get an automation](#get-an-automation)
         - [Get subscribers activity for an automation](#get-subscribers-activity-for-an-automation)
+        - [Create a draft automation](#create-a-draft-automation)
+        - [Delete an automation](#delete-an-automation)
     - [Campaigns](#campaigns)
         - [Get a list of campaigns](#get-a-list-of-campaigns)
         - [Get a campaign](#get-a-campaign)
@@ -272,6 +278,70 @@ func main() {
 }
 ```
 
+### Fetch subscriber activity
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListActivityOptions{
+		SubscriberID: "subscriber-id",
+		Filters: &[]mailerlite.Filter{{
+			Name:  "log_name",
+			Value: "email_open",
+		}},
+		Page:  1,
+		Limit: 25,
+	}
+
+	_, _, err := client.Subscriber.ActivityLog(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get single import
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	importReport, _, err := client.Subscriber.GetImport(ctx, "import-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(importReport.Data.Done)
+}
+```
+
 ## Groups
 
 ### Get a list of groups
@@ -468,6 +538,46 @@ func main() {
 	ctx := context.TODO()
 
 	_, err := client.Group.UnAssign(ctx, "group-id", "subscriber-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Import subscribers to a group
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.ImportSubscribersOptions{
+		Subscribers: []mailerlite.ImportSubscriber{
+			{
+				Email: "example@example.com",
+				Fields: map[string]interface{}{
+					"name": "Example",
+				},
+			},
+			{
+				Email: "another@example.com",
+			},
+		},
+	}
+
+	_, _, err := client.Group.ImportSubscribers(ctx, "group-id", options)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -809,6 +919,58 @@ func main() {
 }
 ```
 
+### Create a draft automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.Create(ctx, "Automation Name")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Delete an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, err := client.Automation.Delete(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ## Campaigns
 
 ### Get a list of campaigns
@@ -1057,10 +1219,20 @@ func main() {
 
 	listOptions := &mailerlite.ListCampaignSubscriberOptions{
 		CampaignID: "campaign-id",
-		Page:       1,
-		Limit:      10,
+		Filters: &[]mailerlite.Filter{
+			{
+				Name:  "type",
+				Value: "opened",
+			},
+			{
+				Name:  "search",
+				Value: "subscriber@example.com",
+			},
+		},
+		Page:  1,
+		Limit: 10,
 	}
-	
+
 	_, _, err := client.Campaign.Subscribers(ctx, listOptions)
 	if err != nil {
 		log.Fatal(err)

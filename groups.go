@@ -17,6 +17,7 @@ type GroupService interface {
 	Subscribers(ctx context.Context, options *ListGroupSubscriberOptions) (*RootSubscribers, *Response, error)
 	Assign(ctx context.Context, groupID, subscriberID string) (*RootGroup, *Response, error)
 	UnAssign(ctx context.Context, groupID, subscriberID string) (*Response, error)
+	ImportSubscribers(ctx context.Context, groupID string, options *ImportSubscribersOptions) (*RootImportSubscribers, *Response, error)
 }
 
 // groupService implements GroupService.
@@ -63,6 +64,19 @@ type ListGroupSubscriberOptions struct {
 	Filters *[]Filter `json:"filters,omitempty"`
 	Page    int       `url:"page,omitempty"`
 	Limit   int       `url:"limit,omitempty"`
+}
+
+type ImportSubscribersOptions struct {
+	Subscribers []ImportSubscriber `json:"subscribers"`
+}
+
+type ImportSubscriber struct {
+	Email  string                 `json:"email"`
+	Fields map[string]interface{} `json:"fields,omitempty"`
+}
+
+type RootImportSubscribers struct {
+	ImportProgressURL string `json:"import_progress_url"`
 }
 
 func (s *groupService) List(ctx context.Context, options *ListGroupOptions) (*RootGroups, *Response, error) {
@@ -178,4 +192,21 @@ func (s *groupService) UnAssign(ctx context.Context, groupID, subscriberID strin
 	}
 
 	return res, nil
+}
+
+func (s *groupService) ImportSubscribers(ctx context.Context, groupID string, options *ImportSubscribersOptions) (*RootImportSubscribers, *Response, error) {
+	path := fmt.Sprintf("%s/%s/import-subscribers", groupEndpoint, groupID)
+
+	req, err := s.client.newRequest(http.MethodPost, path, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootImportSubscribers)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
