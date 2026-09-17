@@ -4,3 +4,11 @@ pre-commit:
     gitleaks:
       run: gitleaks git --pre-commit --redact --staged --verbose --no-banner
       fail_text: Staged changes contain a secret. Remove it; never commit and revert.
+    secrets:
+      run: |
+        git secrets --list | grep -q 'mssp' || {
+          git secrets --register-aws
+          git secrets --add 'mlsn\.[A-Za-z0-9._-]+'
+          git secrets --add 'mssp\.[A-Za-z0-9._-]+'
+        }
+        git secrets --scan {staged_files}
