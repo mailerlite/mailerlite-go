@@ -151,6 +151,7 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 
 	if method == http.MethodPost ||
 		method == http.MethodPut ||
+		method == http.MethodPatch ||
 		method == http.MethodDelete {
 		err := json.NewEncoder(reqBodyBytes).Encode(body)
 		if err != nil {
