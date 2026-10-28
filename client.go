@@ -74,8 +74,12 @@ type Response struct {
 type ErrorResponse struct {
 	Response *http.Response      // HTTP response that caused this error
 	Message  string              `json:"message"` // error message
+	Code     string              `json:"code"`    // machine-readable error code, if the API sends one
 	Errors   map[string][]string `json:"errors"`
 }
+
+// ErrorCodeVersionConflict - the email changed after the etag sent with the request was read
+const ErrorCodeVersionConflict = "version_conflict"
 
 // Rate represents the rate limit for the current client.
 type Rate struct {

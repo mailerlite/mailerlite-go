@@ -12,6 +12,7 @@ import (
 
 	"github.com/mailerlite/mailerlite-go"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -174,6 +175,27 @@ func TestWillHandleAPIError(t *testing.T) {
 	assert.Error(t, err)
 	assert.IsType(t, err, &mailerlite.ErrorResponse{})
 	assert.Equal(t, err.Error(), "GET https://connect.mailerlite.com/api/subscribers: 422 The given data was invalid. map[filter:[The filter must be an array.]]")
+}
+
+func TestWillHandleAPIErrorCode(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusConflict,
+			Request:    req,
+			Body: io.NopCloser(strings.NewReader(`{"message":"The email changed since you read it. Fetch it again, then retry with its new etag.",
+			"code":"version_conflict","etag":"2"}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	_, _, err := client.Timezone.List(context.TODO())
+
+	var errResp *mailerlite.ErrorResponse
+	require.ErrorAs(t, err, &errResp)
+	assert.Equal(t, mailerlite.ErrorCodeVersionConflict, errResp.Code)
 }
 
 func TestWillHandleAPIError202(t *testing.T) {
