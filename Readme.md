@@ -75,6 +75,7 @@ MailerLite Golang SDK
         - [Get a block of an email](#get-a-block-of-an-email)
         - [Insert a block into an email](#insert-a-block-into-an-email)
         - [Update the content of a block](#update-the-content-of-a-block)
+        - [Move a block](#move-a-block)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1792,6 +1793,42 @@ func main() {
 	}
 
 	log.Print(updated.Etag)
+}
+```
+
+### Move a block
+
+The position is `start`, `end`, `before` or `after`. `BlockID` is required for `before` and `after`, and must be a sibling of the block.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	moved, _, err := client.Email.MoveBlock(ctx, "email-id", "block-id", &mailerlite.MoveEmailBlockOptions{
+		Placement: mailerlite.EmailBlockPosition{
+			Position: mailerlite.EmailBlockPositionBefore,
+			BlockID:  "other-block-id",
+		},
+		Etag: "etag-from-the-last-read-or-write",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(moved.Etag)
 }
 ```
 

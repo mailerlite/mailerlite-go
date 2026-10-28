@@ -18,6 +18,7 @@ type EmailService interface {
 	GetBlock(ctx context.Context, emailID string, blockID string) (*RootEmailBlock, *Response, error)
 	CreateBlock(ctx context.Context, emailID string, block *CreateEmailBlockOptions) (*RootEmailBlock, *Response, error)
 	UpdateBlock(ctx context.Context, emailID string, blockID string, block *UpdateEmailBlockOptions) (*RootEmailBlock, *Response, error)
+	MoveBlock(ctx context.Context, emailID string, blockID string, move *MoveEmailBlockOptions) (*RootEmailBlock, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -187,6 +188,12 @@ type UpdateEmailBlockOptions struct {
 	Etag          string                 `json:"etag,omitempty"`
 }
 
+// MoveEmailBlockOptions - modifies the behavior of EmailService.MoveBlock method
+type MoveEmailBlockOptions struct {
+	Placement EmailBlockPosition `json:"placement"`
+	Etag      string             `json:"etag,omitempty"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -259,6 +266,23 @@ func (s *emailService) CreateBlock(ctx context.Context, emailID string, block *C
 func (s *emailService) UpdateBlock(ctx context.Context, emailID string, blockID string, block *UpdateEmailBlockOptions) (*RootEmailBlock, *Response, error) {
 	path := fmt.Sprintf("%s/%s/blocks/%s", emailEndpoint, emailID, blockID)
 	req, err := s.client.newRequest(http.MethodPatch, path, block)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailBlock)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// MoveBlock - move a block among its siblings. The nesting of the block does not change.
+func (s *emailService) MoveBlock(ctx context.Context, emailID string, blockID string, move *MoveEmailBlockOptions) (*RootEmailBlock, *Response, error) {
+	path := fmt.Sprintf("%s/%s/blocks/%s/move", emailEndpoint, emailID, blockID)
+	req, err := s.client.newRequest(http.MethodPost, path, move)
 	if err != nil {
 		return nil, nil, err
 	}
