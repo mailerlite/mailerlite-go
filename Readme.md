@@ -71,6 +71,7 @@ MailerLite Golang SDK
         - [Get a list of languages](#get-a-list-of-languages)
     - [Emails](#emails)
         - [Get an email](#get-an-email)
+        - [Get the HTML of an email](#get-the-html-of-an-email)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1637,6 +1638,36 @@ func main() {
 	}
 
 	log.Print(email.Etag)
+}
+```
+
+### Get the HTML of an email
+
+The HTML is a preview. Do not send it yourself, because it contains personalization tokens and no tracking URLs.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	html, _, err := client.Email.GetHTML(ctx, "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(html.Data.HTML)
 }
 ```
 

@@ -73,3 +73,24 @@ func TestCanGetEmail(t *testing.T) {
 	assert.Equal(t, "3", root.Data.Blocks[1].Children[0].ID)
 	assert.Nil(t, root.Data.Blocks[0].Placement)
 }
+
+func TestCanGetEmailHTML(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodGet, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/html", req.URL.String())
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"data":{"html":"<!doctype html><p>Hello</p>"},"etag":"42"}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	root, _, err := client.Email.GetHTML(context.TODO(), "123")
+	require.NoError(t, err)
+
+	assert.Equal(t, "<!doctype html><p>Hello</p>", root.Data.HTML)
+	assert.Equal(t, "42", root.Etag)
+}

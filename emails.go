@@ -14,6 +14,7 @@ const emailEndpoint = "/emails"
 // See https://developers.mailerlite.com/docs/emails.html
 type EmailService interface {
 	Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error)
+	GetHTML(ctx context.Context, emailID string) (*RootEmailHTML, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -144,6 +145,17 @@ type EmailSocialLink struct {
 	LinkID *int   `json:"link_id,omitempty"`
 }
 
+// RootEmailHTML - email HTML response
+type RootEmailHTML struct {
+	Data EmailHTML `json:"data"`
+	Etag string    `json:"etag"`
+}
+
+// EmailHTML - a preview of the email HTML. It is not ready to send.
+type EmailHTML struct {
+	HTML string `json:"html"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -153,6 +165,23 @@ func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocum
 	}
 
 	root := new(RootEmailDocument)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// GetHTML - get the HTML preview of an email
+func (s *emailService) GetHTML(ctx context.Context, emailID string) (*RootEmailHTML, *Response, error) {
+	path := fmt.Sprintf("%s/%s/html", emailEndpoint, emailID)
+	req, err := s.client.newRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailHTML)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
