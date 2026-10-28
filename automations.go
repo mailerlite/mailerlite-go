@@ -15,6 +15,9 @@ type AutomationService interface {
 	Subscribers(ctx context.Context, options *ListAutomationSubscriberOptions) (*RootAutomationsSubscriber, *Response, error)
 	Create(ctx context.Context, automationName string) (*RootAutomation, *Response, error)
 	Delete(ctx context.Context, automationID string) (*Response, error)
+	EcommerceStats(ctx context.Context, automationID string, options *AutomationEcommerceOptions) (*EcommerceRoot[EcommerceReport], *Response, error)
+	EmailEcommerceStats(ctx context.Context, automationID, emailID string, options *AutomationEcommerceOptions) (*EcommerceRoot[EcommerceReport], *Response, error)
+	EcommerceOrders(ctx context.Context, automationID string, options *AutomationEcommerceOrderOptions) (*EcommerceRootList[map[string]interface{}], *Response, error)
 }
 
 type automationService struct {
@@ -257,4 +260,19 @@ func (s *automationService) Delete(ctx context.Context, automationID string) (*R
 	}
 
 	return res, nil
+}
+
+func (s *automationService) EcommerceStats(ctx context.Context, automationID string, options *AutomationEcommerceOptions) (*EcommerceRoot[EcommerceReport], *Response, error) {
+	path := fmt.Sprintf("%s/%s/monthly-totals/ecommerce", automationEndpoint, automationID)
+	return send[EcommerceRoot[EcommerceReport]](ctx, s.service, http.MethodGet, path, options)
+}
+
+func (s *automationService) EmailEcommerceStats(ctx context.Context, automationID, emailID string, options *AutomationEcommerceOptions) (*EcommerceRoot[EcommerceReport], *Response, error) {
+	path := fmt.Sprintf("%s/%s/emails/%s/ecommerce-overview-stats", automationEndpoint, automationID, emailID)
+	return send[EcommerceRoot[EcommerceReport]](ctx, s.service, http.MethodGet, path, options)
+}
+
+func (s *automationService) EcommerceOrders(ctx context.Context, automationID string, options *AutomationEcommerceOrderOptions) (*EcommerceRootList[map[string]interface{}], *Response, error) {
+	path := fmt.Sprintf("%s/%s/order-activity", automationEndpoint, automationID)
+	return send[EcommerceRootList[map[string]interface{}]](ctx, s.service, http.MethodGet, path, options)
 }

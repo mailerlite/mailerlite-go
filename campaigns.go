@@ -19,6 +19,8 @@ type CampaignService interface {
 	Subscribers(ctx context.Context, options *ListCampaignSubscriberOptions) (*RootCampaignSubscribers, *Response, error)
 	Languages(ctx context.Context) (*RootCampaignLanguages, *Response, error)
 	Delete(ctx context.Context, campaignID string) (*Response, error)
+	EcommerceStats(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*EcommerceRoot[EcommerceReport], *Response, error)
+	EcommerceOrders(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*EcommerceRootList[EcommerceReportOrder], *Response, error)
 }
 
 // campaignService implements CampaignService.
@@ -384,4 +386,14 @@ func (s *campaignService) Delete(ctx context.Context, campaignID string) (*Respo
 	}
 
 	return res, nil
+}
+
+func (s *campaignService) EcommerceStats(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*EcommerceRoot[EcommerceReport], *Response, error) {
+	path := fmt.Sprintf("%s/%s/reports/ecommerce", campaignEndpoint, campaignID)
+	return send[EcommerceRoot[EcommerceReport]](ctx, s.service, http.MethodGet, path, options)
+}
+
+func (s *campaignService) EcommerceOrders(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*EcommerceRootList[EcommerceReportOrder], *Response, error) {
+	path := fmt.Sprintf("%s/%s/reports/ecommerce/orders", campaignEndpoint, campaignID)
+	return send[EcommerceRootList[EcommerceReportOrder]](ctx, s.service, http.MethodGet, path, options)
 }

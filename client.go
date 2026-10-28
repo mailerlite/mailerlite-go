@@ -54,6 +54,7 @@ type Client struct {
 	Campaign   CampaignService   // Campaign service
 	Automation AutomationService // Automation service
 	Timezone   TimezoneService   // Timezone service
+	Ecommerce  *EcommerceService // E-commerce services
 
 }
 
@@ -121,6 +122,7 @@ func NewClient(apiKey string) *Client {
 	client.Campaign = &campaignService{&client.common}
 	client.Automation = &automationService{&client.common}
 	client.Timezone = &timezoneService{&client.common}
+	client.Ecommerce = newEcommerceService(&client.common)
 
 	return client
 }
