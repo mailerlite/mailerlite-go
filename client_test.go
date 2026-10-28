@@ -196,6 +196,54 @@ func TestWillHandleAPIErrorCode(t *testing.T) {
 	var errResp *mailerlite.ErrorResponse
 	require.ErrorAs(t, err, &errResp)
 	assert.Equal(t, mailerlite.ErrorCodeVersionConflict, errResp.Code)
+	assert.Equal(t, "2", errResp.Etag)
+	assert.Equal(t, "GET https://connect.mailerlite.com/api/timezones: 409 version_conflict: The email changed since you read it. Fetch it again, then retry with its new etag. map[]", err.Error())
+}
+
+func TestWillKeepAPIErrorCodeOnRateLimitError(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	header := http.Header{}
+	header.Set(mailerlite.HeaderRateRemaining, "0")
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusTooManyRequests,
+			Request:    req,
+			Header:     header,
+			Body:       io.NopCloser(strings.NewReader(`{"message":"Too Many Attempts.","code":"too_many_requests"}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	_, _, err := client.Timezone.List(context.TODO())
+
+	var rateErr *mailerlite.RateLimitError
+	require.ErrorAs(t, err, &rateErr)
+	assert.Equal(t, "too_many_requests", rateErr.Code)
+}
+
+func TestWillHandleAPIFilterWithSpaces(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, "https://connect.mailerlite.com/api/files?filter%5Bname%5D=summer+sale+%7Bbanner%7D", req.URL.String())
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Request:    req,
+			Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	options := &mailerlite.ListFileOptions{
+		Filters: &[]mailerlite.Filter{{Name: "name", Value: "summer sale {banner}"}},
+	}
+
+	_, _, err := client.File.List(context.TODO(), options)
+	require.NoError(t, err)
 }
 
 func TestWillHandleAPIError202(t *testing.T) {

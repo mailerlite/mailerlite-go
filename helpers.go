@@ -59,7 +59,7 @@ var (
 	EmailBlockTypeNumberedList = "numbered_list"
 	EmailBlockTypeParagraph    = "paragraph"
 	EmailBlockTypeSocialIcon   = "social_icon"
-	EmailBlockTypeTitle        = "title" // returned by reads only; it cannot be inserted
+	EmailBlockTypeTitle        = "title" // only reads return this type; you cannot insert a block of this type
 	EmailBlockTypeVideo        = "video"
 
 	EmailBlockPositionStart  = "start"

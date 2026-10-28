@@ -2,11 +2,24 @@ package mailerlite
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 )
 
 const emailEndpoint = "/emails"
+
+// ErrorCodeVersionConflict - the email changed after you read the etag that the request sent
+const ErrorCodeVersionConflict = "version_conflict"
+
+var (
+	// ErrEmptyID - an email, block or version ID is empty. The SDK sends no request.
+	ErrEmptyID = errors.New("mailerlite: the ID must not be empty")
+
+	// ErrEmptyEtag - a write has no etag. The SDK sends no request.
+	ErrEmptyEtag = errors.New("mailerlite: the etag must not be empty")
+)
 
 // EmailService defines an interface for operations on emails built with the simple editor.
 //
@@ -25,7 +38,7 @@ type EmailService interface {
 	ValidateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*EmailValidation, *Response, error)
 	CreateTemplate(ctx context.Context, emailID string, template *CreateEmailTemplateOptions) (*RootEmailTemplate, *Response, error)
 	CreateVersion(ctx context.Context, emailID string) (*RootEmailVersion, *Response, error)
-	ListVersions(ctx context.Context, options *ListEmailVersionOptions) (*RootEmailVersions, *Response, error)
+	ListVersions(ctx context.Context, emailID string, options *ListEmailVersionOptions) (*RootEmailVersions, *Response, error)
 	RestoreVersion(ctx context.Context, emailID string, versionID string, etag string) (*RootEmailDocument, *Response, error)
 }
 
@@ -68,7 +81,7 @@ type EmailBlockPlacement struct {
 
 // EmailSettings - the design settings of an email.
 //
-// All fields are pointers so that an update sends only the keys that are set.
+// All fields are pointers so that an update sends only the keys that you set.
 // An empty string unsets a value, and the email then uses the account value.
 type EmailSettings struct {
 	Brand      *EmailBrandSettings      `json:"brand,omitempty"`
@@ -190,7 +203,7 @@ type EmailBlockPosition struct {
 }
 
 // UpdateEmailBlockOptions - modifies the behavior of EmailService.UpdateBlock method.
-// EditorContent replaces the whole content of the block. Keys that are not sent are removed.
+// EditorContent replaces the whole content of the block. The API removes the keys that you do not send.
 type UpdateEmailBlockOptions struct {
 	EditorContent map[string]interface{} `json:"editor_content"`
 	Etag          string                 `json:"etag,omitempty"`
@@ -233,7 +246,7 @@ type EmailRejected struct {
 }
 
 // UpdateEmailSettingsOptions - modifies the behavior of EmailService.UpdateSettings method.
-// Set only the keys to change. A value that is sent is stored on the email, also if it is the same as the account value.
+// Set only the keys to change. The API stores each value that you send on the email, also if it is the same as the account value.
 type UpdateEmailSettingsOptions struct {
 	EmailSettings
 	Etag string `json:"etag,omitempty"`
@@ -284,14 +297,17 @@ type RootEmailVersions struct {
 
 // ListEmailVersionOptions - modifies the behavior of EmailService.ListVersions method
 type ListEmailVersionOptions struct {
-	EmailID string `url:"-"`
-	Page    int    `url:"page,omitempty"`
-	Limit   int    `url:"limit,omitempty"`
+	Page  int `url:"page,omitempty"`
+	Limit int `url:"limit,omitempty"`
 }
 
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
-	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
+	path, err := emailPath("/%s", emailID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
@@ -308,7 +324,11 @@ func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocum
 
 // GetHTML - get the HTML preview of an email
 func (s *emailService) GetHTML(ctx context.Context, emailID string) (*RootEmailHTML, *Response, error) {
-	path := fmt.Sprintf("%s/%s/html", emailEndpoint, emailID)
+	path, err := emailPath("/%s/html", emailID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
@@ -325,7 +345,11 @@ func (s *emailService) GetHTML(ctx context.Context, emailID string) (*RootEmailH
 
 // GetBlock - get a single block of an email, with its placement
 func (s *emailService) GetBlock(ctx context.Context, emailID string, blockID string) (*RootEmailBlock, *Response, error) {
-	path := fmt.Sprintf("%s/%s/blocks/%s", emailEndpoint, emailID, blockID)
+	path, err := emailPath("/%s/blocks/%s", emailID, blockID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
 	if err != nil {
 		return nil, nil, err
@@ -342,7 +366,15 @@ func (s *emailService) GetBlock(ctx context.Context, emailID string, blockID str
 
 // CreateBlock - insert a new block into an email. Without a placement, the block goes at the end.
 func (s *emailService) CreateBlock(ctx context.Context, emailID string, block *CreateEmailBlockOptions) (*RootEmailBlock, *Response, error) {
-	path := fmt.Sprintf("%s/%s/blocks", emailEndpoint, emailID)
+	if block == nil || block.Etag == "" {
+		return nil, nil, ErrEmptyEtag
+	}
+
+	path, err := emailPath("/%s/blocks", emailID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPost, path, block)
 	if err != nil {
 		return nil, nil, err
@@ -359,7 +391,15 @@ func (s *emailService) CreateBlock(ctx context.Context, emailID string, block *C
 
 // UpdateBlock - replace the content of a block. The block type and position do not change.
 func (s *emailService) UpdateBlock(ctx context.Context, emailID string, blockID string, block *UpdateEmailBlockOptions) (*RootEmailBlock, *Response, error) {
-	path := fmt.Sprintf("%s/%s/blocks/%s", emailEndpoint, emailID, blockID)
+	if block == nil || block.Etag == "" {
+		return nil, nil, ErrEmptyEtag
+	}
+
+	path, err := emailPath("/%s/blocks/%s", emailID, blockID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPatch, path, block)
 	if err != nil {
 		return nil, nil, err
@@ -376,7 +416,15 @@ func (s *emailService) UpdateBlock(ctx context.Context, emailID string, blockID 
 
 // MoveBlock - move a block among its siblings. The nesting of the block does not change.
 func (s *emailService) MoveBlock(ctx context.Context, emailID string, blockID string, move *MoveEmailBlockOptions) (*RootEmailBlock, *Response, error) {
-	path := fmt.Sprintf("%s/%s/blocks/%s/move", emailEndpoint, emailID, blockID)
+	if move == nil || move.Etag == "" {
+		return nil, nil, ErrEmptyEtag
+	}
+
+	path, err := emailPath("/%s/blocks/%s/move", emailID, blockID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPost, path, move)
 	if err != nil {
 		return nil, nil, err
@@ -393,7 +441,15 @@ func (s *emailService) MoveBlock(ctx context.Context, emailID string, blockID st
 
 // DeleteBlock - delete a block and the blocks nested in it
 func (s *emailService) DeleteBlock(ctx context.Context, emailID string, blockID string, etag string) (*RootEmailEtag, *Response, error) {
-	path := fmt.Sprintf("%s/%s/blocks/%s", emailEndpoint, emailID, blockID)
+	if etag == "" {
+		return nil, nil, ErrEmptyEtag
+	}
+
+	path, err := emailPath("/%s/blocks/%s", emailID, blockID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodDelete, path, &emailEtag{Etag: etag})
 	if err != nil {
 		return nil, nil, err
@@ -408,9 +464,13 @@ func (s *emailService) DeleteBlock(ctx context.Context, emailID string, blockID 
 	return root, res, nil
 }
 
-// ValidateBlock - check a block against the rules of EmailService.CreateBlock. Nothing is saved.
+// ValidateBlock - check a block against the rules of EmailService.CreateBlock. The API does not save the block.
 func (s *emailService) ValidateBlock(ctx context.Context, block *CreateEmailBlockOptions) (*EmailValidation, *Response, error) {
-	path := fmt.Sprintf("%s/blocks/validate", emailEndpoint)
+	path, err := emailPath("/blocks/validate")
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPost, path, block)
 	if err != nil {
 		return nil, nil, err
@@ -427,7 +487,15 @@ func (s *emailService) ValidateBlock(ctx context.Context, block *CreateEmailBloc
 
 // UpdateSettings - change the design settings of an email
 func (s *emailService) UpdateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*RootEmailSettings, *Response, error) {
-	path := fmt.Sprintf("%s/%s/settings", emailEndpoint, emailID)
+	if settings == nil || settings.Etag == "" {
+		return nil, nil, ErrEmptyEtag
+	}
+
+	path, err := emailPath("/%s/settings", emailID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPatch, path, settings)
 	if err != nil {
 		return nil, nil, err
@@ -442,9 +510,13 @@ func (s *emailService) UpdateSettings(ctx context.Context, emailID string, setti
 	return root, res, nil
 }
 
-// ValidateSettings - check a settings change against the rules of EmailService.UpdateSettings. Nothing is saved.
+// ValidateSettings - check a settings change against the rules of EmailService.UpdateSettings. The API does not save the settings.
 func (s *emailService) ValidateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*EmailValidation, *Response, error) {
-	path := fmt.Sprintf("%s/%s/settings/validate", emailEndpoint, emailID)
+	path, err := emailPath("/%s/settings/validate", emailID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPost, path, settings)
 	if err != nil {
 		return nil, nil, err
@@ -461,7 +533,11 @@ func (s *emailService) ValidateSettings(ctx context.Context, emailID string, set
 
 // CreateTemplate - save an email as a template
 func (s *emailService) CreateTemplate(ctx context.Context, emailID string, template *CreateEmailTemplateOptions) (*RootEmailTemplate, *Response, error) {
-	path := fmt.Sprintf("%s/%s/templates", emailEndpoint, emailID)
+	path, err := emailPath("/%s/templates", emailID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPost, path, template)
 	if err != nil {
 		return nil, nil, err
@@ -479,7 +555,11 @@ func (s *emailService) CreateTemplate(ctx context.Context, emailID string, templ
 // CreateVersion - save the email as a new version. If nothing changed since the last version,
 // the API returns that version with status 200 instead of 201.
 func (s *emailService) CreateVersion(ctx context.Context, emailID string) (*RootEmailVersion, *Response, error) {
-	path := fmt.Sprintf("%s/%s/versions", emailEndpoint, emailID)
+	path, err := emailPath("/%s/versions", emailID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPost, path, nil)
 	if err != nil {
 		return nil, nil, err
@@ -495,8 +575,12 @@ func (s *emailService) CreateVersion(ctx context.Context, emailID string) (*Root
 }
 
 // ListVersions - list the saved versions of an email, newest first
-func (s *emailService) ListVersions(ctx context.Context, options *ListEmailVersionOptions) (*RootEmailVersions, *Response, error) {
-	path := fmt.Sprintf("%s/%s/versions", emailEndpoint, options.EmailID)
+func (s *emailService) ListVersions(ctx context.Context, emailID string, options *ListEmailVersionOptions) (*RootEmailVersions, *Response, error) {
+	path, err := emailPath("/%s/versions", emailID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodGet, path, options)
 	if err != nil {
 		return nil, nil, err
@@ -513,7 +597,15 @@ func (s *emailService) ListVersions(ctx context.Context, options *ListEmailVersi
 
 // RestoreVersion - put an email back to a saved version. The API saves the replaced state as a version first.
 func (s *emailService) RestoreVersion(ctx context.Context, emailID string, versionID string, etag string) (*RootEmailDocument, *Response, error) {
-	path := fmt.Sprintf("%s/%s/versions/%s/restore", emailEndpoint, emailID, versionID)
+	if etag == "" {
+		return nil, nil, ErrEmptyEtag
+	}
+
+	path, err := emailPath("/%s/versions/%s/restore", emailID, versionID)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPost, path, &emailEtag{Etag: etag})
 	if err != nil {
 		return nil, nil, err
@@ -526,4 +618,17 @@ func (s *emailService) RestoreVersion(ctx context.Context, emailID string, versi
 	}
 
 	return root, res, nil
+}
+
+// emailPath - build a path under emailEndpoint from format. It escapes each ID and returns ErrEmptyID if an ID is empty.
+func emailPath(format string, ids ...string) (string, error) {
+	args := make([]interface{}, len(ids))
+	for i, id := range ids {
+		if id == "" {
+			return "", ErrEmptyID
+		}
+		args[i] = url.PathEscape(id)
+	}
+
+	return emailEndpoint + fmt.Sprintf(format, args...), nil
 }

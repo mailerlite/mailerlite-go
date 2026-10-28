@@ -1627,7 +1627,9 @@ func main() {
 
 These endpoints work on emails built with the simple editor. Get the email ID from a campaign's `emails` array.
 
-Every write must send the `etag` that the last read or write of the email returned. If the email changed after that, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. Get the email again and use its new `etag`.
+Every write must send the `etag` that the last read or write of the email returned. If the etag is empty, the SDK returns `mailerlite.ErrEmptyEtag` and sends no request. If the email changed after that read or write, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. The `Etag` field of the `*mailerlite.ErrorResponse` contains the current etag of the email.
+
+If an email, block or version ID is empty, the SDK returns `mailerlite.ErrEmptyID` and sends no request.
 
 ### Get an email
 
@@ -2040,10 +2042,9 @@ func main() {
 
 	ctx := context.TODO()
 
-	versions, _, err := client.Email.ListVersions(ctx, &mailerlite.ListEmailVersionOptions{
-		EmailID: "email-id",
-		Page:    1,
-		Limit:   10,
+	versions, _, err := client.Email.ListVersions(ctx, "email-id", &mailerlite.ListEmailVersionOptions{
+		Page:  1,
+		Limit: 10,
 	})
 	if err != nil {
 		log.Fatal(err)

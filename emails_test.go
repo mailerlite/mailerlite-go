@@ -405,12 +405,11 @@ func TestCanListEmailVersions(t *testing.T) {
 	client.SetHttpClient(testClient)
 
 	options := &mailerlite.ListEmailVersionOptions{
-		EmailID: "123",
-		Page:    2,
-		Limit:   10,
+		Page:  2,
+		Limit: 10,
 	}
 
-	root, _, err := client.Email.ListVersions(context.TODO(), options)
+	root, _, err := client.Email.ListVersions(context.TODO(), "123", options)
 	require.NoError(t, err)
 
 	require.Len(t, root.Data, 2)
@@ -443,4 +442,156 @@ func TestCanRestoreEmailVersion(t *testing.T) {
 	assert.Equal(t, "43", root.Etag)
 	assert.Equal(t, "123", root.Data.ID)
 	assert.Len(t, root.Data.Blocks, 2)
+}
+
+func TestCanListEmailVersionsWithoutOptions(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/versions", req.URL.String())
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"data":[]}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	root, _, err := client.Email.ListVersions(context.TODO(), "123", nil)
+	require.NoError(t, err)
+
+	assert.Empty(t, root.Data)
+}
+
+func TestEmailWritesRejectEmptyEtag(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		t.Errorf("unexpected request: %v %v", req.Method, req.URL)
+		return nil
+	})
+
+	client.SetHttpClient(testClient)
+
+	ctx := context.TODO()
+	writes := map[string]func() error{
+		"CreateBlock": func() error {
+			_, _, err := client.Email.CreateBlock(ctx, "123", &mailerlite.CreateEmailBlockOptions{Type: mailerlite.EmailBlockTypeDivider})
+			return err
+		},
+		"CreateBlock nil": func() error {
+			_, _, err := client.Email.CreateBlock(ctx, "123", nil)
+			return err
+		},
+		"UpdateBlock": func() error {
+			_, _, err := client.Email.UpdateBlock(ctx, "123", "57", &mailerlite.UpdateEmailBlockOptions{})
+			return err
+		},
+		"MoveBlock": func() error {
+			_, _, err := client.Email.MoveBlock(ctx, "123", "57", &mailerlite.MoveEmailBlockOptions{})
+			return err
+		},
+		"DeleteBlock": func() error {
+			_, _, err := client.Email.DeleteBlock(ctx, "123", "57", "")
+			return err
+		},
+		"UpdateSettings": func() error {
+			_, _, err := client.Email.UpdateSettings(ctx, "123", &mailerlite.UpdateEmailSettingsOptions{})
+			return err
+		},
+		"RestoreVersion": func() error {
+			_, _, err := client.Email.RestoreVersion(ctx, "123", "4", "")
+			return err
+		},
+	}
+
+	for name, write := range writes {
+		assert.ErrorIs(t, write(), mailerlite.ErrEmptyEtag, name)
+	}
+}
+
+func TestEmailMethodsRejectEmptyID(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		t.Errorf("unexpected request: %v %v", req.Method, req.URL)
+		return nil
+	})
+
+	client.SetHttpClient(testClient)
+
+	ctx := context.TODO()
+	calls := map[string]func() error{
+		"Get": func() error {
+			_, _, err := client.Email.Get(ctx, "")
+			return err
+		},
+		"GetBlock": func() error {
+			_, _, err := client.Email.GetBlock(ctx, "123", "")
+			return err
+		},
+		"DeleteBlock": func() error {
+			_, _, err := client.Email.DeleteBlock(ctx, "123", "", "42")
+			return err
+		},
+		"ListVersions": func() error {
+			_, _, err := client.Email.ListVersions(ctx, "", nil)
+			return err
+		},
+		"RestoreVersion": func() error {
+			_, _, err := client.Email.RestoreVersion(ctx, "123", "", "42")
+			return err
+		},
+	}
+
+	for name, call := range calls {
+		assert.ErrorIs(t, call(), mailerlite.ErrEmptyID, name)
+	}
+}
+
+func TestEmailEscapesIDs(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/1%2F2%3Fa=b/blocks/3", req.URL.String())
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(testEmailBlock)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	_, _, err := client.Email.GetBlock(context.TODO(), "1/2?a=b", "3")
+	require.NoError(t, err)
+}
+
+func TestEmailWriteReturnsVersionConflict(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusConflict,
+			Request:    req,
+			Body: io.NopCloser(strings.NewReader(`{"message":"The email changed since you read it. Fetch it again, then retry with its new etag.",
+			"code":"version_conflict","etag":"43"}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	settings := &mailerlite.UpdateEmailSettingsOptions{
+		EmailSettings: mailerlite.EmailSettings{
+			Layout: &mailerlite.EmailLayoutSettings{Alignment: mailerlite.String("left")},
+		},
+		Etag: "42",
+	}
+
+	_, res, err := client.Email.UpdateSettings(context.TODO(), "123", settings)
+
+	assert.Equal(t, http.StatusConflict, res.StatusCode)
+	var errResp *mailerlite.ErrorResponse
+	require.ErrorAs(t, err, &errResp)
+	assert.Equal(t, mailerlite.ErrorCodeVersionConflict, errResp.Code)
+	assert.Equal(t, "43", errResp.Etag)
 }

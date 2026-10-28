@@ -78,11 +78,9 @@ type ErrorResponse struct {
 	Response *http.Response      // HTTP response that caused this error
 	Message  string              `json:"message"` // error message
 	Code     string              `json:"code"`    // machine-readable error code, if the API sends one
+	Etag     string              `json:"etag"`    // the current etag of the email, sent with ErrorCodeVersionConflict
 	Errors   map[string][]string `json:"errors"`
 }
-
-// ErrorCodeVersionConflict - the email changed after the etag sent with the request was read
-const ErrorCodeVersionConflict = "version_conflict"
 
 // Rate represents the rate limit for the current client.
 type Rate struct {
@@ -97,9 +95,14 @@ type Rate struct {
 }
 
 func (r *ErrorResponse) Error() string {
+	message := r.Message
+	if r.Code != "" {
+		message = r.Code + ": " + message
+	}
+
 	return fmt.Sprintf("%v %v: %d %v %+v",
 		r.Response.Request.Method, r.Response.Request.URL,
-		r.Response.StatusCode, r.Message, r.Errors)
+		r.Response.StatusCode, message, r.Errors)
 }
 
 // AuthError occurs when using HTTP Authentication fails
@@ -293,6 +296,7 @@ func checkResponse(r *http.Response) error {
 			Rate:     parseRate(r),
 			Response: errorResponse.Response,
 			Message:  errorResponse.Message,
+			Code:     errorResponse.Code,
 		}
 	default:
 		return errorResponse
@@ -324,9 +328,11 @@ func addOptions(s string, opt interface{}) (string, error) {
 				if fv == "" {
 					continue
 				}
-				split := strings.Fields(strings.Trim(fv, "{}"))
-				filterKey := fmt.Sprintf("filter[%s]", split[0])
-				origValues.Add(filterKey, split[1])
+				// fv is a Filter formatted as "{name value}". Split at the first space only,
+				// because the value can contain spaces and braces.
+				fv = strings.TrimSuffix(strings.TrimPrefix(fv, "{"), "}")
+				name, value, _ := strings.Cut(fv, " ")
+				origValues.Add(fmt.Sprintf("filter[%s]", name), value)
 			}
 			continue
 		} else {
@@ -370,6 +376,7 @@ type RateLimitError struct {
 	Rate     Rate           // Rate specifies last known rate limit for the client
 	Response *http.Response // HTTP response that caused this error
 	Message  string         `json:"message"` // error message
+	Code     string         `json:"code"`    // machine-readable error code, if the API sends one
 }
 
 func (r *RateLimitError) Error() string {
