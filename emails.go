@@ -24,6 +24,7 @@ type EmailService interface {
 	UpdateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*RootEmailSettings, *Response, error)
 	ValidateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*EmailValidation, *Response, error)
 	CreateTemplate(ctx context.Context, emailID string, template *CreateEmailTemplateOptions) (*RootEmailTemplate, *Response, error)
+	CreateVersion(ctx context.Context, emailID string) (*RootEmailVersion, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -260,6 +261,18 @@ type EmailTemplate struct {
 	CreatedAt string `json:"created_at"`
 }
 
+// RootEmailVersion - single email version response
+type RootEmailVersion struct {
+	Data EmailVersion `json:"data"`
+}
+
+// EmailVersion - a saved copy of the content and the settings of an email
+type EmailVersion struct {
+	ID        string `json:"id"`
+	CreatedAt string `json:"created_at"`
+	Current   bool   `json:"current"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -439,6 +452,24 @@ func (s *emailService) CreateTemplate(ctx context.Context, emailID string, templ
 	}
 
 	root := new(RootEmailTemplate)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// CreateVersion - save the email as a new version. If nothing changed since the last version,
+// the API returns that version with status 200 instead of 201.
+func (s *emailService) CreateVersion(ctx context.Context, emailID string) (*RootEmailVersion, *Response, error) {
+	path := fmt.Sprintf("%s/%s/versions", emailEndpoint, emailID)
+	req, err := s.client.newRequest(http.MethodPost, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailVersion)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

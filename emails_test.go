@@ -363,3 +363,27 @@ func TestCanCreateEmailTemplate(t *testing.T) {
 	assert.Equal(t, "email", root.Data.Type)
 	assert.Equal(t, "2026-10-28 12:00:00", root.Data.CreatedAt)
 }
+
+func TestCanCreateEmailVersion(t *testing.T) {
+	for _, status := range []int{http.StatusCreated, http.StatusOK} {
+		client := mailerlite.NewClient(testKey)
+
+		testClient := NewTestClient(func(req *http.Request) *http.Response {
+			assert.Equal(t, http.MethodPost, req.Method)
+			assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/versions", req.URL.String())
+			return &http.Response{
+				StatusCode: status,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"data":{"id":"5","created_at":"2026-10-28 12:00:00","current":true}}`)),
+			}
+		})
+
+		client.SetHttpClient(testClient)
+
+		root, res, err := client.Email.CreateVersion(context.TODO(), "123")
+		require.NoError(t, err)
+
+		assert.Equal(t, status, res.StatusCode)
+		assert.Equal(t, "5", root.Data.ID)
+		assert.True(t, root.Data.Current)
+	}
+}

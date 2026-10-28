@@ -81,6 +81,7 @@ MailerLite Golang SDK
         - [Update the design settings of an email](#update-the-design-settings-of-an-email)
         - [Validate the design settings of an email](#validate-the-design-settings-of-an-email)
         - [Save an email as a template](#save-an-email-as-a-template)
+        - [Save a version of an email](#save-a-version-of-an-email)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -2009,6 +2010,36 @@ func main() {
 	}
 
 	log.Print(template.Data.ID)
+}
+```
+
+### Save a version of an email
+
+Changes made through the API do not save a version. If nothing changed since the last version, the API returns that version with status `200` instead of `201`.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	version, _, err := client.Email.CreateVersion(ctx, "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(version.Data.ID)
 }
 ```
 
