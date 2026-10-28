@@ -76,6 +76,7 @@ MailerLite Golang SDK
         - [Insert a block into an email](#insert-a-block-into-an-email)
         - [Update the content of a block](#update-the-content-of-a-block)
         - [Move a block](#move-a-block)
+        - [Delete a block](#delete-a-block)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1829,6 +1830,36 @@ func main() {
 	}
 
 	log.Print(moved.Etag)
+}
+```
+
+### Delete a block
+
+The blocks nested in the block are deleted too. The response has only the new etag of the email.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	deleted, _, err := client.Email.DeleteBlock(ctx, "email-id", "block-id", "etag-from-the-last-read-or-write")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(deleted.Etag)
 }
 ```
 

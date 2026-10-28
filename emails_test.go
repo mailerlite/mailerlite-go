@@ -214,3 +214,25 @@ func TestCanMoveEmailBlock(t *testing.T) {
 	assert.Equal(t, "57", root.Data.ID)
 	assert.Equal(t, "43", root.Etag)
 }
+
+func TestCanDeleteEmailBlock(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodDelete, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/blocks/57", req.URL.String())
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, `{"etag":"42"}`, strings.TrimRight(string(b), "\r\n"))
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"etag":"43"}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	root, _, err := client.Email.DeleteBlock(context.TODO(), "123", "57", "42")
+	require.NoError(t, err)
+
+	assert.Equal(t, "43", root.Etag)
+}

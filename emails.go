@@ -19,6 +19,7 @@ type EmailService interface {
 	CreateBlock(ctx context.Context, emailID string, block *CreateEmailBlockOptions) (*RootEmailBlock, *Response, error)
 	UpdateBlock(ctx context.Context, emailID string, blockID string, block *UpdateEmailBlockOptions) (*RootEmailBlock, *Response, error)
 	MoveBlock(ctx context.Context, emailID string, blockID string, move *MoveEmailBlockOptions) (*RootEmailBlock, *Response, error)
+	DeleteBlock(ctx context.Context, emailID string, blockID string, etag string) (*RootEmailEtag, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -194,6 +195,16 @@ type MoveEmailBlockOptions struct {
 	Etag      string             `json:"etag,omitempty"`
 }
 
+// RootEmailEtag - response with only the new etag of the email
+type RootEmailEtag struct {
+	Etag string `json:"etag"`
+}
+
+// emailEtag - request body for writes that send only the etag
+type emailEtag struct {
+	Etag string `json:"etag"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -288,6 +299,23 @@ func (s *emailService) MoveBlock(ctx context.Context, emailID string, blockID st
 	}
 
 	root := new(RootEmailBlock)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// DeleteBlock - delete a block and the blocks nested in it
+func (s *emailService) DeleteBlock(ctx context.Context, emailID string, blockID string, etag string) (*RootEmailEtag, *Response, error) {
+	path := fmt.Sprintf("%s/%s/blocks/%s", emailEndpoint, emailID, blockID)
+	req, err := s.client.newRequest(http.MethodDelete, path, &emailEtag{Etag: etag})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailEtag)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
