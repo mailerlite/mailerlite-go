@@ -26,6 +26,7 @@ type EmailService interface {
 	CreateTemplate(ctx context.Context, emailID string, template *CreateEmailTemplateOptions) (*RootEmailTemplate, *Response, error)
 	CreateVersion(ctx context.Context, emailID string) (*RootEmailVersion, *Response, error)
 	ListVersions(ctx context.Context, options *ListEmailVersionOptions) (*RootEmailVersions, *Response, error)
+	RestoreVersion(ctx context.Context, emailID string, versionID string, etag string) (*RootEmailDocument, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -502,6 +503,23 @@ func (s *emailService) ListVersions(ctx context.Context, options *ListEmailVersi
 	}
 
 	root := new(RootEmailVersions)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// RestoreVersion - put an email back to a saved version. The API saves the replaced state as a version first.
+func (s *emailService) RestoreVersion(ctx context.Context, emailID string, versionID string, etag string) (*RootEmailDocument, *Response, error) {
+	path := fmt.Sprintf("%s/%s/versions/%s/restore", emailEndpoint, emailID, versionID)
+	req, err := s.client.newRequest(http.MethodPost, path, &emailEtag{Etag: etag})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailDocument)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

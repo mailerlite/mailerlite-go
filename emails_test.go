@@ -420,3 +420,27 @@ func TestCanListEmailVersions(t *testing.T) {
 	assert.Equal(t, 12, root.Meta.Total)
 	assert.True(t, root.Links.IsLastPage())
 }
+
+func TestCanRestoreEmailVersion(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodPost, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/versions/4/restore", req.URL.String())
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, `{"etag":"42"}`, strings.TrimRight(string(b), "\r\n"))
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"data":` + testEmailDocument + `,"etag":"43"}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	root, _, err := client.Email.RestoreVersion(context.TODO(), "123", "4", "42")
+	require.NoError(t, err)
+
+	assert.Equal(t, "43", root.Etag)
+	assert.Equal(t, "123", root.Data.ID)
+	assert.Len(t, root.Data.Blocks, 2)
+}

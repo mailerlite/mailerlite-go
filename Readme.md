@@ -83,6 +83,7 @@ MailerLite Golang SDK
         - [Save an email as a template](#save-an-email-as-a-template)
         - [Get a list of versions of an email](#get-a-list-of-versions-of-an-email)
         - [Save a version of an email](#save-a-version-of-an-email)
+        - [Restore a version of an email](#restore-a-version-of-an-email)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -2075,6 +2076,36 @@ func main() {
 	}
 
 	log.Print(version.Data.ID)
+}
+```
+
+### Restore a version of an email
+
+The API saves the replaced state as a version first, so you can undo a restore. The response is the restored email.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	email, _, err := client.Email.RestoreVersion(ctx, "email-id", "version-id", "etag-from-the-last-read-or-write")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(email.Etag)
 }
 ```
 
