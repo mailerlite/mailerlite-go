@@ -94,3 +94,30 @@ func TestCanGetEmailHTML(t *testing.T) {
 	assert.Equal(t, "<!doctype html><p>Hello</p>", root.Data.HTML)
 	assert.Equal(t, "42", root.Etag)
 }
+
+const testEmailBlock = `{"data":{"id":"57","type":"paragraph","editor_content":{"content":[{"type":"text","text":"Hello"}]},"placement":{"after":"56","before":null}},"etag":"43"}`
+
+func TestCanGetEmailBlock(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodGet, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/blocks/57", req.URL.String())
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(testEmailBlock)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	root, _, err := client.Email.GetBlock(context.TODO(), "123", "57")
+	require.NoError(t, err)
+
+	assert.Equal(t, "43", root.Etag)
+	assert.Equal(t, "57", root.Data.ID)
+	assert.Equal(t, "paragraph", root.Data.Type)
+	require.NotNil(t, root.Data.Placement)
+	assert.Equal(t, "56", *root.Data.Placement.After)
+	assert.Nil(t, root.Data.Placement.Before)
+}

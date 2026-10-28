@@ -72,6 +72,7 @@ MailerLite Golang SDK
     - [Emails](#emails)
         - [Get an email](#get-an-email)
         - [Get the HTML of an email](#get-the-html-of-an-email)
+        - [Get a block of an email](#get-a-block-of-an-email)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1668,6 +1669,36 @@ func main() {
 	}
 
 	log.Print(html.Data.HTML)
+}
+```
+
+### Get a block of an email
+
+`Placement` gives the IDs of the blocks before and after the block.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	block, _, err := client.Email.GetBlock(ctx, "email-id", "block-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(block.Data.Type)
 }
 ```
 

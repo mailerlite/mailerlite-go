@@ -15,6 +15,7 @@ const emailEndpoint = "/emails"
 type EmailService interface {
 	Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error)
 	GetHTML(ctx context.Context, emailID string) (*RootEmailHTML, *Response, error)
+	GetBlock(ctx context.Context, emailID string, blockID string) (*RootEmailBlock, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -156,6 +157,12 @@ type EmailHTML struct {
 	HTML string `json:"html"`
 }
 
+// RootEmailBlock - single email block response
+type RootEmailBlock struct {
+	Data EmailBlock `json:"data"`
+	Etag string     `json:"etag"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -182,6 +189,23 @@ func (s *emailService) GetHTML(ctx context.Context, emailID string) (*RootEmailH
 	}
 
 	root := new(RootEmailHTML)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// GetBlock - get a single block of an email, with its placement
+func (s *emailService) GetBlock(ctx context.Context, emailID string, blockID string) (*RootEmailBlock, *Response, error) {
+	path := fmt.Sprintf("%s/%s/blocks/%s", emailEndpoint, emailID, blockID)
+	req, err := s.client.newRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailBlock)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
