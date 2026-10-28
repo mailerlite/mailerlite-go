@@ -15,9 +15,9 @@ type AutomationService interface {
 	Subscribers(ctx context.Context, options *ListAutomationSubscriberOptions) (*RootAutomationsSubscriber, *Response, error)
 	Create(ctx context.Context, automationName string) (*RootAutomation, *Response, error)
 	Delete(ctx context.Context, automationID string) (*Response, error)
-	EcommerceStats(ctx context.Context, automationID string, options *AutomationEcommerceOptions) (*EcommerceRoot[EcommerceReport], *Response, error)
-	EmailEcommerceStats(ctx context.Context, automationID, emailID string, options *AutomationEcommerceOptions) (*EcommerceRoot[EcommerceReport], *Response, error)
-	EcommerceOrders(ctx context.Context, automationID string, options *AutomationEcommerceOrderOptions) (*EcommerceRootList[map[string]interface{}], *Response, error)
+	EcommerceStats(ctx context.Context, automationID string, options *AutomationEcommerceOptions) (*RootEcommerceReport, *Response, error)
+	EmailEcommerceStats(ctx context.Context, automationID, emailID string, options *AutomationEcommerceOptions) (*RootEcommerceReport, *Response, error)
+	EcommerceOrders(ctx context.Context, automationID string, options *AutomationEcommerceOrderOptions) (*RootAutomationEcommerceOrders, *Response, error)
 }
 
 type automationService struct {
@@ -262,17 +262,35 @@ func (s *automationService) Delete(ctx context.Context, automationID string) (*R
 	return res, nil
 }
 
-func (s *automationService) EcommerceStats(ctx context.Context, automationID string, options *AutomationEcommerceOptions) (*EcommerceRoot[EcommerceReport], *Response, error) {
+func (s *automationService) EcommerceStats(ctx context.Context, automationID string, options *AutomationEcommerceOptions) (*RootEcommerceReport, *Response, error) {
 	path := fmt.Sprintf("%s/%s/monthly-totals/ecommerce", automationEndpoint, automationID)
-	return send[EcommerceRoot[EcommerceReport]](ctx, s.service, http.MethodGet, path, options)
+	root := new(RootEcommerceReport)
+	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *automationService) EmailEcommerceStats(ctx context.Context, automationID, emailID string, options *AutomationEcommerceOptions) (*EcommerceRoot[EcommerceReport], *Response, error) {
+func (s *automationService) EmailEcommerceStats(ctx context.Context, automationID, emailID string, options *AutomationEcommerceOptions) (*RootEcommerceReport, *Response, error) {
 	path := fmt.Sprintf("%s/%s/emails/%s/ecommerce-overview-stats", automationEndpoint, automationID, emailID)
-	return send[EcommerceRoot[EcommerceReport]](ctx, s.service, http.MethodGet, path, options)
+	root := new(RootEcommerceReport)
+	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *automationService) EcommerceOrders(ctx context.Context, automationID string, options *AutomationEcommerceOrderOptions) (*EcommerceRootList[map[string]interface{}], *Response, error) {
+func (s *automationService) EcommerceOrders(ctx context.Context, automationID string, options *AutomationEcommerceOrderOptions) (*RootAutomationEcommerceOrders, *Response, error) {
 	path := fmt.Sprintf("%s/%s/order-activity", automationEndpoint, automationID)
-	return send[EcommerceRootList[map[string]interface{}]](ctx, s.service, http.MethodGet, path, options)
+	root := new(RootAutomationEcommerceOrders)
+	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }

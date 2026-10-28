@@ -21,8 +21,8 @@ type SubscriberService interface {
 	Forget(ctx context.Context, subscriberID string) (*RootSubscriber, *Response, error)
 	ActivityLog(ctx context.Context, options *ListActivityOptions) (*RootActivityLog, *Response, error)
 	GetImport(ctx context.Context, importID string) (*RootImport, *Response, error)
-	EcommerceStats(ctx context.Context, subscriberID string, options *EcommerceReportOptions) (*EcommerceRoot[EcommerceReport], *Response, error)
-	EcommerceOrders(ctx context.Context, subscriberID string, options *EcommerceReportOptions) (*EcommerceRootList[EcommerceReportOrder], *Response, error)
+	EcommerceStats(ctx context.Context, subscriberID string, options *EcommerceReportOptions) (*RootEcommerceReport, *Response, error)
+	EcommerceOrders(ctx context.Context, subscriberID string, options *EcommerceReportOptions) (*RootEcommerceReportOrders, *Response, error)
 }
 
 // subscriberService implements SubscriberService.
@@ -326,12 +326,24 @@ func (s *subscriberService) GetImport(ctx context.Context, importID string) (*Ro
 	return root, res, nil
 }
 
-func (s *subscriberService) EcommerceStats(ctx context.Context, subscriberID string, options *EcommerceReportOptions) (*EcommerceRoot[EcommerceReport], *Response, error) {
+func (s *subscriberService) EcommerceStats(ctx context.Context, subscriberID string, options *EcommerceReportOptions) (*RootEcommerceReport, *Response, error) {
 	path := fmt.Sprintf("%s/%s/reports/ecommerce", subscriberEndpoint, subscriberID)
-	return send[EcommerceRoot[EcommerceReport]](ctx, s.service, http.MethodGet, path, options)
+	root := new(RootEcommerceReport)
+	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *subscriberService) EcommerceOrders(ctx context.Context, subscriberID string, options *EcommerceReportOptions) (*EcommerceRootList[EcommerceReportOrder], *Response, error) {
+func (s *subscriberService) EcommerceOrders(ctx context.Context, subscriberID string, options *EcommerceReportOptions) (*RootEcommerceReportOrders, *Response, error) {
 	path := fmt.Sprintf("%s/%s/reports/ecommerce/orders", subscriberEndpoint, subscriberID)
-	return send[EcommerceRootList[EcommerceReportOrder]](ctx, s.service, http.MethodGet, path, options)
+	root := new(RootEcommerceReportOrders)
+	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }

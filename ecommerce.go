@@ -25,69 +25,69 @@ type EcommerceService struct {
 }
 
 type ShopService interface {
-	List(ctx context.Context, options *ListEcommerceOptions) (*EcommerceRootList[Shop], *Response, error)
-	Get(ctx context.Context, shopID string) (*EcommerceRoot[Shop], *Response, error)
-	Create(ctx context.Context, shop *ShopParams) (*EcommerceRoot[Shop], *Response, error)
-	Update(ctx context.Context, shopID string, shop *ShopParams) (*EcommerceRoot[Shop], *Response, error)
+	List(ctx context.Context, options *ListEcommerceOptions) (*RootShops, *Response, error)
+	Get(ctx context.Context, shopID string) (*RootShop, *Response, error)
+	Create(ctx context.Context, shop *ShopParams) (*RootShop, *Response, error)
+	Update(ctx context.Context, shopID string, shop *ShopParams) (*RootShop, *Response, error)
 	Delete(ctx context.Context, shopID string) (*Response, error)
-	Stats(ctx context.Context, shopID string, options *ShopStatsOptions) (*EcommerceRoot[ShopStats], *Response, error)
+	Stats(ctx context.Context, shopID string, options *ShopStatsOptions) (*RootShopStats, *Response, error)
 }
 
 type ProductService interface {
-	List(ctx context.Context, shopID string, options *ListProductOptions) (*EcommerceRootList[Product], *Response, error)
-	Get(ctx context.Context, shopID, productID string) (*EcommerceRoot[Product], *Response, error)
-	Create(ctx context.Context, shopID string, product *ProductParams) (*EcommerceRoot[Product], *Response, error)
-	Update(ctx context.Context, shopID, productID string, product *ProductParams) (*EcommerceRoot[Product], *Response, error)
+	List(ctx context.Context, shopID string, options *ListProductOptions) (*RootProducts, *Response, error)
+	Get(ctx context.Context, shopID, productID string) (*RootProduct, *Response, error)
+	Create(ctx context.Context, shopID string, product *ProductParams) (*RootProduct, *Response, error)
+	Update(ctx context.Context, shopID, productID string, product *ProductParams) (*RootProduct, *Response, error)
 	Delete(ctx context.Context, shopID, productID string) (*Response, error)
-	ChangeStatus(ctx context.Context, shopID, productID string, enabled bool) (*EcommerceRoot[Product], *Response, error)
-	AssignCategories(ctx context.Context, shopID, productID string, categoryIDs []string, replace bool) (*EcommerceRoot[Product], *Response, error)
+	ChangeStatus(ctx context.Context, shopID, productID string, enabled bool) (*RootProduct, *Response, error)
+	AssignCategories(ctx context.Context, shopID, productID string, categoryIDs []string, replace bool) (*RootProduct, *Response, error)
 }
 
 type ProductVariantService interface {
-	List(ctx context.Context, shopID, productID string) (*EcommerceRootList[ProductVariant], *Response, error)
-	Sync(ctx context.Context, shopID, productID string, variants []ProductVariantParams) (*EcommerceRoot[Product], *Response, error)
-	Update(ctx context.Context, shopID, productID, variantID string, variant *ProductVariantParams) (*EcommerceRoot[Product], *Response, error)
+	List(ctx context.Context, shopID, productID string) (*RootProductVariants, *Response, error)
+	Sync(ctx context.Context, shopID, productID string, variants []ProductVariantParams) (*RootProduct, *Response, error)
+	Update(ctx context.Context, shopID, productID, variantID string, variant *ProductVariantParams) (*RootProduct, *Response, error)
 	Delete(ctx context.Context, shopID, productID, variantID string) (*Response, error)
 }
 
 type CategoryService interface {
-	List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*EcommerceRootList[Category], *Response, error)
-	Get(ctx context.Context, shopID, categoryID string) (*EcommerceRoot[Category], *Response, error)
-	Create(ctx context.Context, shopID string, category *CategoryParams) (*EcommerceRoot[Category], *Response, error)
-	Update(ctx context.Context, shopID, categoryID string, category *CategoryParams) (*EcommerceRoot[Category], *Response, error)
+	List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*RootCategories, *Response, error)
+	Get(ctx context.Context, shopID, categoryID string) (*RootCategory, *Response, error)
+	Create(ctx context.Context, shopID string, category *CategoryParams) (*RootCategory, *Response, error)
+	Update(ctx context.Context, shopID, categoryID string, category *CategoryParams) (*RootCategory, *Response, error)
 	Delete(ctx context.Context, shopID, categoryID string) (*Response, error)
-	Products(ctx context.Context, shopID, categoryID string, options *ListEcommerceOptions) (*EcommerceRootList[Product], *Response, error)
+	Products(ctx context.Context, shopID, categoryID string, options *ListEcommerceOptions) (*RootProducts, *Response, error)
 	AssignProduct(ctx context.Context, shopID, categoryID, productID string) (*Response, error)
 	UnassignProduct(ctx context.Context, shopID, categoryID, productID string) (*Response, error)
 }
 
 type CustomerService interface {
-	List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*EcommerceRootList[Customer], *Response, error)
-	Get(ctx context.Context, shopID, customerID string) (*EcommerceRoot[Customer], *Response, error)
-	Create(ctx context.Context, shopID string, customer *CustomerParams) (*EcommerceRoot[Customer], *Response, error)
-	Update(ctx context.Context, shopID, customerID string, customer *CustomerParams) (*EcommerceRoot[Customer], *Response, error)
+	List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*RootCustomers, *Response, error)
+	Get(ctx context.Context, shopID, customerID string) (*RootCustomer, *Response, error)
+	Create(ctx context.Context, shopID string, customer *CustomerParams) (*RootCustomer, *Response, error)
+	Update(ctx context.Context, shopID, customerID string, customer *CustomerParams) (*RootCustomer, *Response, error)
 	Delete(ctx context.Context, shopID, customerID string) (*Response, error)
 }
 
 type OrderService interface {
-	List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*EcommerceRootList[Order], *Response, error)
-	Get(ctx context.Context, shopID, orderID string) (*EcommerceRoot[Order], *Response, error)
-	Create(ctx context.Context, shopID string, order *CreateOrderParams) (*EcommerceRoot[Order], *Response, error)
-	Update(ctx context.Context, shopID, orderID string, order *UpdateOrderParams) (*EcommerceRoot[Order], *Response, error)
+	List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*RootOrders, *Response, error)
+	Get(ctx context.Context, shopID, orderID string) (*RootOrder, *Response, error)
+	Create(ctx context.Context, shopID string, order *CreateOrderParams) (*RootOrder, *Response, error)
+	Update(ctx context.Context, shopID, orderID string, order *UpdateOrderParams) (*RootOrder, *Response, error)
 	Delete(ctx context.Context, shopID, orderID string) (*Response, error)
 }
 
 type CartService interface {
-	List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*EcommerceRootList[Cart], *Response, error)
-	Get(ctx context.Context, shopID, cartID string) (*EcommerceRoot[Cart], *Response, error)
-	Update(ctx context.Context, shopID, cartID string, cart *UpdateCartParams) (*EcommerceRoot[Cart], *Response, error)
+	List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*RootCarts, *Response, error)
+	Get(ctx context.Context, shopID, cartID string) (*RootCart, *Response, error)
+	Update(ctx context.Context, shopID, cartID string, cart *UpdateCartParams) (*RootCart, *Response, error)
 }
 
 type CartItemService interface {
-	List(ctx context.Context, shopID, cartID string, options *ListEcommerceOptions) (*EcommerceRootList[CartItem], *Response, error)
-	Get(ctx context.Context, shopID, cartID, itemID string) (*EcommerceRoot[CartItem], *Response, error)
-	Create(ctx context.Context, shopID, cartID string, item *CartItemParams) (*EcommerceRoot[CartItem], *Response, error)
-	Update(ctx context.Context, shopID, cartID, itemID string, item *CartItemParams) (*EcommerceRoot[CartItem], *Response, error)
+	List(ctx context.Context, shopID, cartID string, options *ListEcommerceOptions) (*RootCartItems, *Response, error)
+	Get(ctx context.Context, shopID, cartID, itemID string) (*RootCartItem, *Response, error)
+	Create(ctx context.Context, shopID, cartID string, item *CartItemParams) (*RootCartItem, *Response, error)
+	Update(ctx context.Context, shopID, cartID, itemID string, item *CartItemParams) (*RootCartItem, *Response, error)
 	Delete(ctx context.Context, shopID, cartID, itemID string) (*Response, error)
 }
 
@@ -99,17 +99,107 @@ type EcommerceImportService interface {
 }
 
 type EcommerceSettingService interface {
-	Get(ctx context.Context) (*EcommerceRoot[EcommerceSettings], *Response, error)
+	Get(ctx context.Context) (*RootEcommerceSettings, *Response, error)
 }
 
-type EcommerceRoot[T any] struct {
-	Data T `json:"data"`
+type RootShop struct {
+	Data Shop `json:"data"`
 }
 
-type EcommerceRootList[T any] struct {
-	Data  []T   `json:"data"`
-	Links Links `json:"links"`
-	Meta  Meta  `json:"meta"`
+type RootProduct struct {
+	Data Product `json:"data"`
+}
+
+type RootCategory struct {
+	Data Category `json:"data"`
+}
+
+type RootCustomer struct {
+	Data Customer `json:"data"`
+}
+
+type RootOrder struct {
+	Data Order `json:"data"`
+}
+
+type RootCart struct {
+	Data Cart `json:"data"`
+}
+
+type RootCartItem struct {
+	Data CartItem `json:"data"`
+}
+
+type RootEcommerceSettings struct {
+	Data EcommerceSettings `json:"data"`
+}
+
+type RootShopStats struct {
+	Data ShopStats `json:"data"`
+}
+
+type RootEcommerceReport struct {
+	Data EcommerceReport `json:"data"`
+}
+
+type RootShops struct {
+	Data  []Shop `json:"data"`
+	Links Links  `json:"links"`
+	Meta  Meta   `json:"meta"`
+}
+
+type RootProducts struct {
+	Data  []Product `json:"data"`
+	Links Links     `json:"links"`
+	Meta  Meta      `json:"meta"`
+}
+
+type RootProductVariants struct {
+	Data  []ProductVariant `json:"data"`
+	Links Links            `json:"links"`
+	Meta  Meta             `json:"meta"`
+}
+
+type RootCategories struct {
+	Data  []Category `json:"data"`
+	Links Links      `json:"links"`
+	Meta  Meta       `json:"meta"`
+}
+
+type RootCustomers struct {
+	Data  []Customer `json:"data"`
+	Links Links      `json:"links"`
+	Meta  Meta       `json:"meta"`
+}
+
+type RootOrders struct {
+	Data  []Order `json:"data"`
+	Links Links   `json:"links"`
+	Meta  Meta    `json:"meta"`
+}
+
+type RootCarts struct {
+	Data  []Cart `json:"data"`
+	Links Links  `json:"links"`
+	Meta  Meta   `json:"meta"`
+}
+
+type RootCartItems struct {
+	Data  []CartItem `json:"data"`
+	Links Links      `json:"links"`
+	Meta  Meta       `json:"meta"`
+}
+
+type RootEcommerceReportOrders struct {
+	Data  []EcommerceReportOrder `json:"data"`
+	Links Links                  `json:"links"`
+	Meta  Meta                   `json:"meta"`
+}
+
+type RootAutomationEcommerceOrders struct {
+	Data  []map[string]interface{} `json:"data"`
+	Links Links                    `json:"links"`
+	Meta  Meta                     `json:"meta"`
 }
 
 // Amount is a money value the API may send as a JSON number or a numeric string.
@@ -424,19 +514,13 @@ func shopPath(shopID string, format string, args ...interface{}) string {
 	return fmt.Sprintf("%s/%s", ecommerceShopEndpoint, shopID) + fmt.Sprintf(format, args...)
 }
 
-func send[T any](ctx context.Context, s *service, method, path string, body interface{}) (*T, *Response, error) {
+func send(ctx context.Context, s *service, method, path string, body interface{}, v interface{}) (*Response, error) {
 	req, err := s.client.newRequest(method, path, body)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	root := new(T)
-	res, err := s.client.do(ctx, req, root)
-	if err != nil {
-		return nil, res, err
-	}
-
-	return root, res, nil
+	return s.client.do(ctx, req, v)
 }
 
 func sendNoContent(ctx context.Context, s *service, method, path string, body interface{}) (*Response, error) {
@@ -450,74 +534,158 @@ func sendNoContent(ctx context.Context, s *service, method, path string, body in
 
 type shopService struct{ *service }
 
-func (s *shopService) List(ctx context.Context, options *ListEcommerceOptions) (*EcommerceRootList[Shop], *Response, error) {
-	return send[EcommerceRootList[Shop]](ctx, s.service, http.MethodGet, ecommerceShopEndpoint, options)
+func (s *shopService) List(ctx context.Context, options *ListEcommerceOptions) (*RootShops, *Response, error) {
+	root := new(RootShops)
+	res, err := send(ctx, s.service, http.MethodGet, ecommerceShopEndpoint, options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *shopService) Get(ctx context.Context, shopID string) (*EcommerceRoot[Shop], *Response, error) {
-	return send[EcommerceRoot[Shop]](ctx, s.service, http.MethodGet, shopPath(shopID, ""), nil)
+func (s *shopService) Get(ctx context.Context, shopID string) (*RootShop, *Response, error) {
+	root := new(RootShop)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, ""), nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *shopService) Create(ctx context.Context, shop *ShopParams) (*EcommerceRoot[Shop], *Response, error) {
-	return send[EcommerceRoot[Shop]](ctx, s.service, http.MethodPost, ecommerceShopEndpoint, shop)
+func (s *shopService) Create(ctx context.Context, shop *ShopParams) (*RootShop, *Response, error) {
+	root := new(RootShop)
+	res, err := send(ctx, s.service, http.MethodPost, ecommerceShopEndpoint, shop, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *shopService) Update(ctx context.Context, shopID string, shop *ShopParams) (*EcommerceRoot[Shop], *Response, error) {
-	return send[EcommerceRoot[Shop]](ctx, s.service, http.MethodPut, shopPath(shopID, ""), shop)
+func (s *shopService) Update(ctx context.Context, shopID string, shop *ShopParams) (*RootShop, *Response, error) {
+	root := new(RootShop)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, ""), shop, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 func (s *shopService) Delete(ctx context.Context, shopID string) (*Response, error) {
 	return sendNoContent(ctx, s.service, http.MethodDelete, shopPath(shopID, ""), nil)
 }
 
-func (s *shopService) Stats(ctx context.Context, shopID string, options *ShopStatsOptions) (*EcommerceRoot[ShopStats], *Response, error) {
-	return send[EcommerceRoot[ShopStats]](ctx, s.service, http.MethodGet, shopPath(shopID, "/reports/stats"), options)
+func (s *shopService) Stats(ctx context.Context, shopID string, options *ShopStatsOptions) (*RootShopStats, *Response, error) {
+	root := new(RootShopStats)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/reports/stats"), options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 type productService struct{ *service }
 
-func (s *productService) List(ctx context.Context, shopID string, options *ListProductOptions) (*EcommerceRootList[Product], *Response, error) {
-	return send[EcommerceRootList[Product]](ctx, s.service, http.MethodGet, shopPath(shopID, "/products"), options)
+func (s *productService) List(ctx context.Context, shopID string, options *ListProductOptions) (*RootProducts, *Response, error) {
+	root := new(RootProducts)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/products"), options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *productService) Get(ctx context.Context, shopID, productID string) (*EcommerceRoot[Product], *Response, error) {
-	return send[EcommerceRoot[Product]](ctx, s.service, http.MethodGet, shopPath(shopID, "/products/%s", productID), nil)
+func (s *productService) Get(ctx context.Context, shopID, productID string) (*RootProduct, *Response, error) {
+	root := new(RootProduct)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/products/%s", productID), nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *productService) Create(ctx context.Context, shopID string, product *ProductParams) (*EcommerceRoot[Product], *Response, error) {
-	return send[EcommerceRoot[Product]](ctx, s.service, http.MethodPost, shopPath(shopID, "/products"), product)
+func (s *productService) Create(ctx context.Context, shopID string, product *ProductParams) (*RootProduct, *Response, error) {
+	root := new(RootProduct)
+	res, err := send(ctx, s.service, http.MethodPost, shopPath(shopID, "/products"), product, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *productService) Update(ctx context.Context, shopID, productID string, product *ProductParams) (*EcommerceRoot[Product], *Response, error) {
-	return send[EcommerceRoot[Product]](ctx, s.service, http.MethodPut, shopPath(shopID, "/products/%s", productID), product)
+func (s *productService) Update(ctx context.Context, shopID, productID string, product *ProductParams) (*RootProduct, *Response, error) {
+	root := new(RootProduct)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/products/%s", productID), product, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 func (s *productService) Delete(ctx context.Context, shopID, productID string) (*Response, error) {
 	return sendNoContent(ctx, s.service, http.MethodDelete, shopPath(shopID, "/products/%s", productID), nil)
 }
 
-func (s *productService) ChangeStatus(ctx context.Context, shopID, productID string, enabled bool) (*EcommerceRoot[Product], *Response, error) {
+func (s *productService) ChangeStatus(ctx context.Context, shopID, productID string, enabled bool) (*RootProduct, *Response, error) {
 	body := map[string]bool{"status": enabled}
-	return send[EcommerceRoot[Product]](ctx, s.service, http.MethodPut, shopPath(shopID, "/products/%s/change-status", productID), body)
+	root := new(RootProduct)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/products/%s/change-status", productID), body, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *productService) AssignCategories(ctx context.Context, shopID, productID string, categoryIDs []string, replace bool) (*EcommerceRoot[Product], *Response, error) {
+func (s *productService) AssignCategories(ctx context.Context, shopID, productID string, categoryIDs []string, replace bool) (*RootProduct, *Response, error) {
 	body := map[string]interface{}{"categories": categoryIDs, "replace": replace}
-	return send[EcommerceRoot[Product]](ctx, s.service, http.MethodPut, shopPath(shopID, "/products/%s/categories/multiple", productID), body)
+	root := new(RootProduct)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/products/%s/categories/multiple", productID), body, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 type productVariantService struct{ *service }
 
-func (s *productVariantService) List(ctx context.Context, shopID, productID string) (*EcommerceRootList[ProductVariant], *Response, error) {
-	return send[EcommerceRootList[ProductVariant]](ctx, s.service, http.MethodGet, shopPath(shopID, "/products/%s/variants", productID), nil)
+func (s *productVariantService) List(ctx context.Context, shopID, productID string) (*RootProductVariants, *Response, error) {
+	root := new(RootProductVariants)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/products/%s/variants", productID), nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *productVariantService) Sync(ctx context.Context, shopID, productID string, variants []ProductVariantParams) (*EcommerceRoot[Product], *Response, error) {
-	return send[EcommerceRoot[Product]](ctx, s.service, http.MethodPost, shopPath(shopID, "/products/%s/variants", productID), variants)
+func (s *productVariantService) Sync(ctx context.Context, shopID, productID string, variants []ProductVariantParams) (*RootProduct, *Response, error) {
+	root := new(RootProduct)
+	res, err := send(ctx, s.service, http.MethodPost, shopPath(shopID, "/products/%s/variants", productID), variants, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *productVariantService) Update(ctx context.Context, shopID, productID, variantID string, variant *ProductVariantParams) (*EcommerceRoot[Product], *Response, error) {
-	return send[EcommerceRoot[Product]](ctx, s.service, http.MethodPut, shopPath(shopID, "/products/%s/variants/%s", productID, variantID), variant)
+func (s *productVariantService) Update(ctx context.Context, shopID, productID, variantID string, variant *ProductVariantParams) (*RootProduct, *Response, error) {
+	root := new(RootProduct)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/products/%s/variants/%s", productID, variantID), variant, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 func (s *productVariantService) Delete(ctx context.Context, shopID, productID, variantID string) (*Response, error) {
@@ -526,28 +694,58 @@ func (s *productVariantService) Delete(ctx context.Context, shopID, productID, v
 
 type categoryService struct{ *service }
 
-func (s *categoryService) List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*EcommerceRootList[Category], *Response, error) {
-	return send[EcommerceRootList[Category]](ctx, s.service, http.MethodGet, shopPath(shopID, "/categories"), options)
+func (s *categoryService) List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*RootCategories, *Response, error) {
+	root := new(RootCategories)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/categories"), options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *categoryService) Get(ctx context.Context, shopID, categoryID string) (*EcommerceRoot[Category], *Response, error) {
-	return send[EcommerceRoot[Category]](ctx, s.service, http.MethodGet, shopPath(shopID, "/categories/%s", categoryID), nil)
+func (s *categoryService) Get(ctx context.Context, shopID, categoryID string) (*RootCategory, *Response, error) {
+	root := new(RootCategory)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/categories/%s", categoryID), nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *categoryService) Create(ctx context.Context, shopID string, category *CategoryParams) (*EcommerceRoot[Category], *Response, error) {
-	return send[EcommerceRoot[Category]](ctx, s.service, http.MethodPost, shopPath(shopID, "/categories"), category)
+func (s *categoryService) Create(ctx context.Context, shopID string, category *CategoryParams) (*RootCategory, *Response, error) {
+	root := new(RootCategory)
+	res, err := send(ctx, s.service, http.MethodPost, shopPath(shopID, "/categories"), category, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *categoryService) Update(ctx context.Context, shopID, categoryID string, category *CategoryParams) (*EcommerceRoot[Category], *Response, error) {
-	return send[EcommerceRoot[Category]](ctx, s.service, http.MethodPut, shopPath(shopID, "/categories/%s", categoryID), category)
+func (s *categoryService) Update(ctx context.Context, shopID, categoryID string, category *CategoryParams) (*RootCategory, *Response, error) {
+	root := new(RootCategory)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/categories/%s", categoryID), category, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 func (s *categoryService) Delete(ctx context.Context, shopID, categoryID string) (*Response, error) {
 	return sendNoContent(ctx, s.service, http.MethodDelete, shopPath(shopID, "/categories/%s", categoryID), nil)
 }
 
-func (s *categoryService) Products(ctx context.Context, shopID, categoryID string, options *ListEcommerceOptions) (*EcommerceRootList[Product], *Response, error) {
-	return send[EcommerceRootList[Product]](ctx, s.service, http.MethodGet, shopPath(shopID, "/categories/%s/products", categoryID), options)
+func (s *categoryService) Products(ctx context.Context, shopID, categoryID string, options *ListEcommerceOptions) (*RootProducts, *Response, error) {
+	root := new(RootProducts)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/categories/%s/products", categoryID), options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 func (s *categoryService) AssignProduct(ctx context.Context, shopID, categoryID, productID string) (*Response, error) {
@@ -560,20 +758,44 @@ func (s *categoryService) UnassignProduct(ctx context.Context, shopID, categoryI
 
 type customerService struct{ *service }
 
-func (s *customerService) List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*EcommerceRootList[Customer], *Response, error) {
-	return send[EcommerceRootList[Customer]](ctx, s.service, http.MethodGet, shopPath(shopID, "/customers"), options)
+func (s *customerService) List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*RootCustomers, *Response, error) {
+	root := new(RootCustomers)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/customers"), options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *customerService) Get(ctx context.Context, shopID, customerID string) (*EcommerceRoot[Customer], *Response, error) {
-	return send[EcommerceRoot[Customer]](ctx, s.service, http.MethodGet, shopPath(shopID, "/customers/%s", customerID), nil)
+func (s *customerService) Get(ctx context.Context, shopID, customerID string) (*RootCustomer, *Response, error) {
+	root := new(RootCustomer)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/customers/%s", customerID), nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *customerService) Create(ctx context.Context, shopID string, customer *CustomerParams) (*EcommerceRoot[Customer], *Response, error) {
-	return send[EcommerceRoot[Customer]](ctx, s.service, http.MethodPost, shopPath(shopID, "/customers"), customer)
+func (s *customerService) Create(ctx context.Context, shopID string, customer *CustomerParams) (*RootCustomer, *Response, error) {
+	root := new(RootCustomer)
+	res, err := send(ctx, s.service, http.MethodPost, shopPath(shopID, "/customers"), customer, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *customerService) Update(ctx context.Context, shopID, customerID string, customer *CustomerParams) (*EcommerceRoot[Customer], *Response, error) {
-	return send[EcommerceRoot[Customer]](ctx, s.service, http.MethodPut, shopPath(shopID, "/customers/%s", customerID), customer)
+func (s *customerService) Update(ctx context.Context, shopID, customerID string, customer *CustomerParams) (*RootCustomer, *Response, error) {
+	root := new(RootCustomer)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/customers/%s", customerID), customer, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 func (s *customerService) Delete(ctx context.Context, shopID, customerID string) (*Response, error) {
@@ -582,20 +804,44 @@ func (s *customerService) Delete(ctx context.Context, shopID, customerID string)
 
 type orderService struct{ *service }
 
-func (s *orderService) List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*EcommerceRootList[Order], *Response, error) {
-	return send[EcommerceRootList[Order]](ctx, s.service, http.MethodGet, shopPath(shopID, "/orders"), options)
+func (s *orderService) List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*RootOrders, *Response, error) {
+	root := new(RootOrders)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/orders"), options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *orderService) Get(ctx context.Context, shopID, orderID string) (*EcommerceRoot[Order], *Response, error) {
-	return send[EcommerceRoot[Order]](ctx, s.service, http.MethodGet, shopPath(shopID, "/orders/%s", orderID), nil)
+func (s *orderService) Get(ctx context.Context, shopID, orderID string) (*RootOrder, *Response, error) {
+	root := new(RootOrder)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/orders/%s", orderID), nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *orderService) Create(ctx context.Context, shopID string, order *CreateOrderParams) (*EcommerceRoot[Order], *Response, error) {
-	return send[EcommerceRoot[Order]](ctx, s.service, http.MethodPost, shopPath(shopID, "/orders"), order)
+func (s *orderService) Create(ctx context.Context, shopID string, order *CreateOrderParams) (*RootOrder, *Response, error) {
+	root := new(RootOrder)
+	res, err := send(ctx, s.service, http.MethodPost, shopPath(shopID, "/orders"), order, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *orderService) Update(ctx context.Context, shopID, orderID string, order *UpdateOrderParams) (*EcommerceRoot[Order], *Response, error) {
-	return send[EcommerceRoot[Order]](ctx, s.service, http.MethodPut, shopPath(shopID, "/orders/%s", orderID), order)
+func (s *orderService) Update(ctx context.Context, shopID, orderID string, order *UpdateOrderParams) (*RootOrder, *Response, error) {
+	root := new(RootOrder)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/orders/%s", orderID), order, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 func (s *orderService) Delete(ctx context.Context, shopID, orderID string) (*Response, error) {
@@ -604,34 +850,76 @@ func (s *orderService) Delete(ctx context.Context, shopID, orderID string) (*Res
 
 type cartService struct{ *service }
 
-func (s *cartService) List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*EcommerceRootList[Cart], *Response, error) {
-	return send[EcommerceRootList[Cart]](ctx, s.service, http.MethodGet, shopPath(shopID, "/carts"), options)
+func (s *cartService) List(ctx context.Context, shopID string, options *ListEcommerceOptions) (*RootCarts, *Response, error) {
+	root := new(RootCarts)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/carts"), options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *cartService) Get(ctx context.Context, shopID, cartID string) (*EcommerceRoot[Cart], *Response, error) {
-	return send[EcommerceRoot[Cart]](ctx, s.service, http.MethodGet, shopPath(shopID, "/carts/%s", cartID), nil)
+func (s *cartService) Get(ctx context.Context, shopID, cartID string) (*RootCart, *Response, error) {
+	root := new(RootCart)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/carts/%s", cartID), nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *cartService) Update(ctx context.Context, shopID, cartID string, cart *UpdateCartParams) (*EcommerceRoot[Cart], *Response, error) {
-	return send[EcommerceRoot[Cart]](ctx, s.service, http.MethodPut, shopPath(shopID, "/carts/%s", cartID), cart)
+func (s *cartService) Update(ctx context.Context, shopID, cartID string, cart *UpdateCartParams) (*RootCart, *Response, error) {
+	root := new(RootCart)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/carts/%s", cartID), cart, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 type cartItemService struct{ *service }
 
-func (s *cartItemService) List(ctx context.Context, shopID, cartID string, options *ListEcommerceOptions) (*EcommerceRootList[CartItem], *Response, error) {
-	return send[EcommerceRootList[CartItem]](ctx, s.service, http.MethodGet, shopPath(shopID, "/carts/%s/items", cartID), options)
+func (s *cartItemService) List(ctx context.Context, shopID, cartID string, options *ListEcommerceOptions) (*RootCartItems, *Response, error) {
+	root := new(RootCartItems)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/carts/%s/items", cartID), options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *cartItemService) Get(ctx context.Context, shopID, cartID, itemID string) (*EcommerceRoot[CartItem], *Response, error) {
-	return send[EcommerceRoot[CartItem]](ctx, s.service, http.MethodGet, shopPath(shopID, "/carts/%s/items/%s", cartID, itemID), nil)
+func (s *cartItemService) Get(ctx context.Context, shopID, cartID, itemID string) (*RootCartItem, *Response, error) {
+	root := new(RootCartItem)
+	res, err := send(ctx, s.service, http.MethodGet, shopPath(shopID, "/carts/%s/items/%s", cartID, itemID), nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *cartItemService) Create(ctx context.Context, shopID, cartID string, item *CartItemParams) (*EcommerceRoot[CartItem], *Response, error) {
-	return send[EcommerceRoot[CartItem]](ctx, s.service, http.MethodPost, shopPath(shopID, "/carts/%s/items", cartID), item)
+func (s *cartItemService) Create(ctx context.Context, shopID, cartID string, item *CartItemParams) (*RootCartItem, *Response, error) {
+	root := new(RootCartItem)
+	res, err := send(ctx, s.service, http.MethodPost, shopPath(shopID, "/carts/%s/items", cartID), item, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *cartItemService) Update(ctx context.Context, shopID, cartID, itemID string, item *CartItemParams) (*EcommerceRoot[CartItem], *Response, error) {
-	return send[EcommerceRoot[CartItem]](ctx, s.service, http.MethodPut, shopPath(shopID, "/carts/%s/items/%s", cartID, itemID), item)
+func (s *cartItemService) Update(ctx context.Context, shopID, cartID, itemID string, item *CartItemParams) (*RootCartItem, *Response, error) {
+	root := new(RootCartItem)
+	res, err := send(ctx, s.service, http.MethodPut, shopPath(shopID, "/carts/%s/items/%s", cartID, itemID), item, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
 func (s *cartItemService) Delete(ctx context.Context, shopID, cartID, itemID string) (*Response, error) {
@@ -659,6 +947,12 @@ func (s *ecommerceImportService) Orders(ctx context.Context, shopID string, orde
 
 type ecommerceSettingService struct{ *service }
 
-func (s *ecommerceSettingService) Get(ctx context.Context) (*EcommerceRoot[EcommerceSettings], *Response, error) {
-	return send[EcommerceRoot[EcommerceSettings]](ctx, s.service, http.MethodGet, "/ecommerce/settings", nil)
+func (s *ecommerceSettingService) Get(ctx context.Context) (*RootEcommerceSettings, *Response, error) {
+	root := new(RootEcommerceSettings)
+	res, err := send(ctx, s.service, http.MethodGet, "/ecommerce/settings", nil, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }

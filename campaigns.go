@@ -19,8 +19,8 @@ type CampaignService interface {
 	Subscribers(ctx context.Context, options *ListCampaignSubscriberOptions) (*RootCampaignSubscribers, *Response, error)
 	Languages(ctx context.Context) (*RootCampaignLanguages, *Response, error)
 	Delete(ctx context.Context, campaignID string) (*Response, error)
-	EcommerceStats(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*EcommerceRoot[EcommerceReport], *Response, error)
-	EcommerceOrders(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*EcommerceRootList[EcommerceReportOrder], *Response, error)
+	EcommerceStats(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*RootEcommerceReport, *Response, error)
+	EcommerceOrders(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*RootEcommerceReportOrders, *Response, error)
 }
 
 // campaignService implements CampaignService.
@@ -388,12 +388,24 @@ func (s *campaignService) Delete(ctx context.Context, campaignID string) (*Respo
 	return res, nil
 }
 
-func (s *campaignService) EcommerceStats(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*EcommerceRoot[EcommerceReport], *Response, error) {
+func (s *campaignService) EcommerceStats(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*RootEcommerceReport, *Response, error) {
 	path := fmt.Sprintf("%s/%s/reports/ecommerce", campaignEndpoint, campaignID)
-	return send[EcommerceRoot[EcommerceReport]](ctx, s.service, http.MethodGet, path, options)
+	root := new(RootEcommerceReport)
+	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
 
-func (s *campaignService) EcommerceOrders(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*EcommerceRootList[EcommerceReportOrder], *Response, error) {
+func (s *campaignService) EcommerceOrders(ctx context.Context, campaignID string, options *EcommerceReportOptions) (*RootEcommerceReportOrders, *Response, error) {
 	path := fmt.Sprintf("%s/%s/reports/ecommerce/orders", campaignEndpoint, campaignID)
-	return send[EcommerceRootList[EcommerceReportOrder]](ctx, s.service, http.MethodGet, path, options)
+	root := new(RootEcommerceReportOrders)
+	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
 }
