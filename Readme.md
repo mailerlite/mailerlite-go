@@ -84,6 +84,8 @@ MailerLite Golang SDK
         - [Get a list of versions of an email](#get-a-list-of-versions-of-an-email)
         - [Save a version of an email](#save-a-version-of-an-email)
         - [Restore a version of an email](#restore-a-version-of-an-email)
+    - [Brand styles](#brand-styles)
+        - [Get the brand styles](#get-the-brand-styles)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -2106,6 +2108,40 @@ func main() {
 	}
 
 	log.Print(email.Etag)
+}
+```
+
+## Brand styles
+
+### Get the brand styles
+
+The response has the account palette (`Brand`, `nil` if the account has none), the default palette and the presets. To apply a preset to an email, send its `Identifier` as `Brand.Style` in `Email.UpdateSettings`.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	styles, _, err := client.BrandStyle.Get(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, preset := range styles.Data.Presets {
+		log.Print(preset.Identifier)
+	}
 }
 ```
 

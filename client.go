@@ -55,6 +55,7 @@ type Client struct {
 	Automation AutomationService // Automation service
 	Timezone   TimezoneService   // Timezone service
 	Email      EmailService      // Email service
+	BrandStyle BrandStyleService // Brand style service
 
 }
 
@@ -127,6 +128,7 @@ func NewClient(apiKey string) *Client {
 	client.Automation = &automationService{&client.common}
 	client.Timezone = &timezoneService{&client.common}
 	client.Email = &emailService{&client.common}
+	client.BrandStyle = &brandStyleService{&client.common}
 
 	return client
 }
