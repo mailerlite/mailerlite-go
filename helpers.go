@@ -46,6 +46,24 @@ var (
 	CampaignScheduleTypeInstant   = "instant"
 	CampaignScheduleTypeScheduled = "scheduled"
 	CampaignScheduleTypeTimezone  = "timezone_based"
+
+	EmailBlockTypeBlockquote   = "blockquote"
+	EmailBlockTypeBulletedList = "bulleted_list"
+	EmailBlockTypeButton       = "button"
+	EmailBlockTypeCode         = "code"
+	EmailBlockTypeDivider      = "divider"
+	EmailBlockTypeHeading      = "heading"
+	EmailBlockTypeImage        = "image"
+	EmailBlockTypeNumberedList = "numbered_list"
+	EmailBlockTypeParagraph    = "paragraph"
+	EmailBlockTypeSocialIcon   = "social_icon"
+	EmailBlockTypeTitle        = "title" // returned by reads only; it cannot be inserted
+	EmailBlockTypeVideo        = "video"
+
+	EmailBlockPositionStart  = "start"
+	EmailBlockPositionEnd    = "end"
+	EmailBlockPositionBefore = "before"
+	EmailBlockPositionAfter  = "after"
 )
 
 type Meta struct {

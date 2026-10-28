@@ -16,6 +16,7 @@ type EmailService interface {
 	Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error)
 	GetHTML(ctx context.Context, emailID string) (*RootEmailHTML, *Response, error)
 	GetBlock(ctx context.Context, emailID string, blockID string) (*RootEmailBlock, *Response, error)
+	CreateBlock(ctx context.Context, emailID string, block *CreateEmailBlockOptions) (*RootEmailBlock, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -163,6 +164,21 @@ type RootEmailBlock struct {
 	Etag string     `json:"etag"`
 }
 
+// CreateEmailBlockOptions - modifies the behavior of EmailService.CreateBlock method.
+// EditorContent is required. Use an empty map for a block with no content, such as a divider.
+type CreateEmailBlockOptions struct {
+	Type          string                 `json:"type"`
+	EditorContent map[string]interface{} `json:"editor_content"`
+	Placement     *EmailBlockPosition    `json:"placement,omitempty"`
+	Etag          string                 `json:"etag,omitempty"`
+}
+
+// EmailBlockPosition - where to put a block. BlockID is required for the positions "before" and "after".
+type EmailBlockPosition struct {
+	Position string `json:"position"`
+	BlockID  string `json:"block_id,omitempty"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -201,6 +217,23 @@ func (s *emailService) GetHTML(ctx context.Context, emailID string) (*RootEmailH
 func (s *emailService) GetBlock(ctx context.Context, emailID string, blockID string) (*RootEmailBlock, *Response, error) {
 	path := fmt.Sprintf("%s/%s/blocks/%s", emailEndpoint, emailID, blockID)
 	req, err := s.client.newRequest(http.MethodGet, path, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailBlock)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// CreateBlock - insert a new block into an email. Without a placement, the block goes at the end.
+func (s *emailService) CreateBlock(ctx context.Context, emailID string, block *CreateEmailBlockOptions) (*RootEmailBlock, *Response, error) {
+	path := fmt.Sprintf("%s/%s/blocks", emailEndpoint, emailID)
+	req, err := s.client.newRequest(http.MethodPost, path, block)
 	if err != nil {
 		return nil, nil, err
 	}

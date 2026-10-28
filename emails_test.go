@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/mailerlite/mailerlite-go"
@@ -120,4 +121,40 @@ func TestCanGetEmailBlock(t *testing.T) {
 	require.NotNil(t, root.Data.Placement)
 	assert.Equal(t, "56", *root.Data.Placement.After)
 	assert.Nil(t, root.Data.Placement.Before)
+}
+
+func TestCanCreateEmailBlock(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodPost, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/blocks", req.URL.String())
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, `{"type":"paragraph","editor_content":{"content":[{"text":"Hello","type":"text"}]},"placement":{"position":"after","block_id":"56"},"etag":"42"}`, strings.TrimRight(string(b), "\r\n"))
+		return &http.Response{
+			StatusCode: http.StatusCreated,
+			Body:       io.NopCloser(bytes.NewBufferString(testEmailBlock)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type: mailerlite.EmailBlockTypeParagraph,
+		EditorContent: map[string]interface{}{
+			"content": []interface{}{map[string]interface{}{"type": "text", "text": "Hello"}},
+		},
+		Placement: &mailerlite.EmailBlockPosition{
+			Position: mailerlite.EmailBlockPositionAfter,
+			BlockID:  "56",
+		},
+		Etag: "42",
+	}
+
+	root, res, err := client.Email.CreateBlock(context.TODO(), "123", block)
+	require.NoError(t, err)
+
+	assert.Equal(t, http.StatusCreated, res.StatusCode)
+	assert.Equal(t, "57", root.Data.ID)
+	assert.Equal(t, "43", root.Etag)
 }

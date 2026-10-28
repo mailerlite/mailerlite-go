@@ -73,6 +73,7 @@ MailerLite Golang SDK
         - [Get an email](#get-an-email)
         - [Get the HTML of an email](#get-the-html-of-an-email)
         - [Get a block of an email](#get-a-block-of-an-email)
+        - [Insert a block into an email](#insert-a-block-into-an-email)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1699,6 +1700,56 @@ func main() {
 	}
 
 	log.Print(block.Data.Type)
+}
+```
+
+### Insert a block into an email
+
+Without `Placement`, the block goes at the end of the email. `EditorContent` is required. Use an empty map for a block with no content, such as a divider.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	email, _, err := client.Email.Get(ctx, "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type: mailerlite.EmailBlockTypeParagraph,
+		EditorContent: map[string]interface{}{
+			"content": []interface{}{
+				map[string]interface{}{"type": "text", "text": "Hello"},
+			},
+		},
+		Placement: &mailerlite.EmailBlockPosition{
+			Position: mailerlite.EmailBlockPositionAfter,
+			BlockID:  "block-id",
+		},
+		Etag: email.Etag,
+	}
+
+	created, _, err := client.Email.CreateBlock(ctx, "email-id", block)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Use created.Etag for the next write to this email.
+	log.Print(created.Data.ID)
 }
 ```
 
