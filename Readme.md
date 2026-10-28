@@ -70,6 +70,7 @@ MailerLite Golang SDK
     - [Campaign languages](#languages)
         - [Get a list of languages](#get-a-list-of-languages)
     - [Emails](#emails)
+        - [Create a campaign with the simple editor](#create-a-campaign-with-the-simple-editor)
         - [Get an email](#get-an-email)
         - [Get the HTML of an email](#get-the-html-of-an-email)
         - [Get a block of an email](#get-a-block-of-an-email)
@@ -1627,9 +1628,57 @@ func main() {
 
 These endpoints work on emails built with the simple editor. Get the email ID from a campaign's `emails` array.
 
+To get a simple editor email, create a campaign with `Editor: mailerlite.EmailEditorSimple`. You can set `Editor` only when you create the campaign. Do not set `Content`. If the email does not use the simple editor, the API returns a `422` error.
+
 Every write must send the `etag` that the last read or write of the email returned. If the etag is empty, the SDK returns `mailerlite.ErrEmptyEtag` and sends no request. If the email changed after that read or write, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. The `Etag` field of the `*mailerlite.ErrorResponse` contains the current etag of the email.
 
 If an email, block or version ID is empty, the SDK returns `mailerlite.ErrEmptyID` and sends no request.
+
+### Create a campaign with the simple editor
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	campaign := &mailerlite.CreateCampaign{
+		Name: "Campaign Name",
+		Type: mailerlite.CampaignTypeRegular,
+		Emails: []mailerlite.Emails{
+			{
+				Subject:  "Subject",
+				FromName: "Your Name",
+				From:     "your@domain.com",
+				Editor:   mailerlite.EmailEditorSimple,
+			},
+		},
+	}
+
+	root, _, err := client.Campaign.Create(ctx, campaign)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	email, _, err := client.Email.Get(ctx, root.Data.Emails[0].ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(email.Etag)
+}
+```
 
 ### Get an email
 

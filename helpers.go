@@ -67,6 +67,8 @@ var (
 	EmailBlockPositionBefore = "before"
 	EmailBlockPositionAfter  = "after"
 
+	EmailEditorSimple = "simple"
+
 	EmailBrandModeAccount  = "account"
 	EmailBrandModeTemplate = "template"
 	EmailBrandModeCustom   = "custom"

@@ -165,11 +165,18 @@ type CreateCampaign struct {
 	ResendSettings *ResendSettings `json:"resend_settings,omitempty"`
 }
 
+// Emails - an email of CreateCampaign and UpdateCampaign.
+// Editor and TemplateID work only with campaignService.Create. Set Editor to EmailEditorSimple to build the email
+// with the simple editor, and then edit it with EmailService. Do not set Content with the simple editor.
+// TemplateID is optional. It must be a shared template of the simple editor.
 type Emails struct {
-	Subject  string `json:"subject"`
-	FromName string `json:"from_name"`
-	From     string `json:"from"`
-	Content  string `json:"content"`
+	Subject    string `json:"subject"`
+	FromName   string `json:"from_name"`
+	From       string `json:"from"`
+	ReplyTo    string `json:"reply_to,omitempty"`
+	Content    string `json:"content,omitempty"`
+	Editor     string `json:"editor,omitempty"`
+	TemplateID int    `json:"template_id,omitempty"`
 }
 
 type AbSettings struct {
