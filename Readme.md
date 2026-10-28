@@ -85,6 +85,7 @@ MailerLite Golang SDK
         - [Get a list of versions of an email](#get-a-list-of-versions-of-an-email)
         - [Save a version of an email](#save-a-version-of-an-email)
         - [Restore a version of an email](#restore-a-version-of-an-email)
+        - [Retry a write with an idempotency key](#retry-a-write-with-an-idempotency-key)
     - [Brand styles](#brand-styles)
         - [Get the brand styles](#get-the-brand-styles)
     - [Files](#files)
@@ -2160,6 +2161,55 @@ func main() {
 	}
 
 	log.Print(email.Etag)
+}
+```
+
+### Retry a write with an idempotency key
+
+If a write fails with a network error, you do not know if the API did the write. Send the write with an idempotency key, and retry it with the same key and the same request. If the first request succeeded, the API returns the stored response again and does not do the write two times.
+
+- Use a new key for each write. The API keeps a key for 24 hours.
+- The key must be 1 to 255 printable ASCII characters. Otherwise the SDK returns `mailerlite.ErrInvalidIdempotencyKey` and sends no request.
+- The same key with a different request returns a `422` error. If the first request is still running, the API returns a `409` error without a code.
+- The API uses the key only for the POST, PATCH and DELETE requests of `client.Email`, except the validate methods.
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type:          mailerlite.EmailBlockTypeDivider,
+		EditorContent: map[string]interface{}{},
+		Etag:          "etag-from-the-last-read-or-write",
+	}
+
+	keyCtx := mailerlite.WithIdempotencyKey(ctx, "insert-divider-0001")
+
+	created, res, err := client.Email.CreateBlock(keyCtx, "email-id", block)
+	var errResp *mailerlite.ErrorResponse
+	if err != nil && !errors.As(err, &errResp) {
+		// Network error: retry with the same key and the same request.
+		created, res, err = client.Email.CreateBlock(keyCtx, "email-id", block)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(created.Data.ID, res.IsIdempotentReplay())
 }
 ```
 

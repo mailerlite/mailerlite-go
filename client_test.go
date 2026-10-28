@@ -463,3 +463,92 @@ func TestWillHandleAPIRateErrorAndNoRemoteCall(t *testing.T) {
 	assert.Equal(t, "GET https://connect.mailerlite.com/api/subscribers: 403 API rate limit of 120 still exceeded until 59s, not making remote request. [retry after 59s]", err.Error())
 
 }
+
+func TestCanSendIdempotencyKey(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, "create-block-1", req.Header.Get(mailerlite.HeaderIdempotencyKey))
+		return &http.Response{
+			StatusCode: http.StatusCreated,
+			Header:     http.Header{mailerlite.HeaderIdempotentReplayed: []string{"true"}},
+			Body:       io.NopCloser(strings.NewReader(`{"data":{"id":"57","type":"divider","editor_content":{}},"etag":"43"}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	ctx := mailerlite.WithIdempotencyKey(context.TODO(), "create-block-1")
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type:          mailerlite.EmailBlockTypeDivider,
+		EditorContent: map[string]interface{}{},
+		Etag:          "42",
+	}
+
+	_, res, err := client.Email.CreateBlock(ctx, "123", block)
+	require.NoError(t, err)
+
+	assert.True(t, res.IsIdempotentReplay())
+}
+
+func TestDoesNotSendIdempotencyKeyByDefault(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		_, ok := req.Header[mailerlite.HeaderIdempotencyKey]
+		assert.False(t, ok)
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	_, res, err := client.Timezone.List(context.TODO())
+	require.NoError(t, err)
+
+	assert.False(t, res.IsIdempotentReplay())
+}
+
+func TestRejectsInvalidIdempotencyKey(t *testing.T) {
+	keys := map[string]string{
+		"empty":         "",
+		"too long":      strings.Repeat("a", 256),
+		"new line":      "key\nX-Injected: 1",
+		"tab":           "key\tvalue",
+		"not ASCII":     "clé",
+		"delete (0x7f)": "key\x7f",
+	}
+
+	for name, key := range keys {
+		t.Run(name, func(t *testing.T) {
+			client := mailerlite.NewClient(testKey)
+
+			requests := 0
+			client.SetHttpClient(NewTestClient(func(req *http.Request) *http.Response {
+				requests++
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(`{}`))}
+			}))
+
+			ctx := mailerlite.WithIdempotencyKey(context.TODO(), key)
+			_, _, err := client.Email.CreateVersion(ctx, "123")
+
+			assert.ErrorIs(t, err, mailerlite.ErrInvalidIdempotencyKey)
+			assert.Equal(t, 0, requests)
+		})
+	}
+}
+
+func TestAcceptsLongestIdempotencyKey(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	key := strings.Repeat("~", 255)
+	client.SetHttpClient(NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, key, req.Header.Get(mailerlite.HeaderIdempotencyKey))
+		return &http.Response{StatusCode: http.StatusCreated, Body: io.NopCloser(strings.NewReader(`{"data":{"id":"5"}}`))}
+	}))
+
+	_, _, err := client.Email.CreateVersion(mailerlite.WithIdempotencyKey(context.TODO(), key), "123")
+	require.NoError(t, err)
+}
