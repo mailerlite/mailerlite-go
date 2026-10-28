@@ -22,6 +22,7 @@ type EmailService interface {
 	DeleteBlock(ctx context.Context, emailID string, blockID string, etag string) (*RootEmailEtag, *Response, error)
 	ValidateBlock(ctx context.Context, block *CreateEmailBlockOptions) (*EmailValidation, *Response, error)
 	UpdateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*RootEmailSettings, *Response, error)
+	ValidateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*EmailValidation, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -386,6 +387,23 @@ func (s *emailService) UpdateSettings(ctx context.Context, emailID string, setti
 	}
 
 	root := new(RootEmailSettings)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// ValidateSettings - check a settings change against the rules of EmailService.UpdateSettings. Nothing is saved.
+func (s *emailService) ValidateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*EmailValidation, *Response, error) {
+	path := fmt.Sprintf("%s/%s/settings/validate", emailEndpoint, emailID)
+	req, err := s.client.newRequest(http.MethodPost, path, settings)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(EmailValidation)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

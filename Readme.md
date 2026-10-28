@@ -79,6 +79,7 @@ MailerLite Golang SDK
         - [Delete a block](#delete-a-block)
         - [Validate a block](#validate-a-block)
         - [Update the design settings of an email](#update-the-design-settings-of-an-email)
+        - [Validate the design settings of an email](#validate-the-design-settings-of-an-email)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1940,6 +1941,42 @@ func main() {
 
 	if updated.Rejected != nil {
 		log.Print(updated.Rejected.Keys)
+	}
+}
+```
+
+### Validate the design settings of an email
+
+This checks a settings change against the same rules as an update, and saves nothing. No etag is necessary.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	result, _, err := client.Email.ValidateSettings(ctx, "email-id", &mailerlite.UpdateEmailSettingsOptions{
+		EmailSettings: mailerlite.EmailSettings{
+			Button: &mailerlite.EmailButtonSettings{BorderRadius: mailerlite.String("12")},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !result.Valid {
+		log.Print(result.Errors)
 	}
 }
 ```

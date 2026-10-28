@@ -307,3 +307,33 @@ func TestCanUpdateEmailSettings(t *testing.T) {
 	require.NotNil(t, root.Rejected)
 	assert.Equal(t, []string{"footer.social_links[0].url"}, root.Rejected.Keys)
 }
+
+func TestCanValidateEmailSettings(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodPost, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/settings/validate", req.URL.String())
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, `{"button":{"border_radius":"16px"}}`, strings.TrimRight(string(b), "\r\n"))
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body: io.NopCloser(bytes.NewBufferString(`{"valid":false,"errors":{"button.border_radius":["Must be a whole number."]},
+			"schema":{"version":"2.73.2","hash":"abc"}}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	settings := &mailerlite.UpdateEmailSettingsOptions{
+		EmailSettings: mailerlite.EmailSettings{
+			Button: &mailerlite.EmailButtonSettings{BorderRadius: mailerlite.String("16px")},
+		},
+	}
+
+	result, _, err := client.Email.ValidateSettings(context.TODO(), "123", settings)
+	require.NoError(t, err)
+
+	assert.False(t, result.Valid)
+	assert.Equal(t, []string{"Must be a whole number."}, result.Errors["button.border_radius"])
+}
