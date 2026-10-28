@@ -267,3 +267,43 @@ func TestCanValidateEmailBlock(t *testing.T) {
 	assert.Equal(t, "2.73.2", result.Schema.Version)
 	assert.Nil(t, result.Rejected)
 }
+
+func TestCanUpdateEmailSettings(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodPatch, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/settings", req.URL.String())
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, `{"brand":{"mode":"custom","background_color":"#f4f4f4"},"footer":{"unsubscribe_text":""},"etag":"42"}`, strings.TrimRight(string(b), "\r\n"))
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body: io.NopCloser(bytes.NewBufferString(`{"data":{"brand":{"mode":"custom","background_color":"#f4f4f4"},"footer":{"social_links":[]}},
+			"etag":"43","rejected":{"message":"Some attributes were rejected.","keys":["footer.social_links[0].url"]}}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	settings := &mailerlite.UpdateEmailSettingsOptions{
+		EmailSettings: mailerlite.EmailSettings{
+			Brand: &mailerlite.EmailBrandSettings{
+				Mode:            mailerlite.String(mailerlite.EmailBrandModeCustom),
+				BackgroundColor: mailerlite.String("#f4f4f4"),
+			},
+			Footer: &mailerlite.EmailFooterSettings{
+				UnsubscribeText: mailerlite.String(""),
+			},
+		},
+		Etag: "42",
+	}
+
+	root, _, err := client.Email.UpdateSettings(context.TODO(), "123", settings)
+	require.NoError(t, err)
+
+	assert.Equal(t, "43", root.Etag)
+	assert.Equal(t, "#f4f4f4", *root.Data.Brand.BackgroundColor)
+	assert.Empty(t, *root.Data.Footer.SocialLinks)
+	require.NotNil(t, root.Rejected)
+	assert.Equal(t, []string{"footer.social_links[0].url"}, root.Rejected.Keys)
+}

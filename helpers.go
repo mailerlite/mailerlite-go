@@ -64,6 +64,10 @@ var (
 	EmailBlockPositionEnd    = "end"
 	EmailBlockPositionBefore = "before"
 	EmailBlockPositionAfter  = "after"
+
+	EmailBrandModeAccount  = "account"
+	EmailBrandModeTemplate = "template"
+	EmailBrandModeCustom   = "custom"
 )
 
 type Meta struct {

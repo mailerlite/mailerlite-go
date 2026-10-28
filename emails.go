@@ -21,6 +21,7 @@ type EmailService interface {
 	MoveBlock(ctx context.Context, emailID string, blockID string, move *MoveEmailBlockOptions) (*RootEmailBlock, *Response, error)
 	DeleteBlock(ctx context.Context, emailID string, blockID string, etag string) (*RootEmailEtag, *Response, error)
 	ValidateBlock(ctx context.Context, block *CreateEmailBlockOptions) (*EmailValidation, *Response, error)
+	UpdateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*RootEmailSettings, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -226,6 +227,20 @@ type EmailRejected struct {
 	Keys    []string `json:"keys"`
 }
 
+// UpdateEmailSettingsOptions - modifies the behavior of EmailService.UpdateSettings method.
+// Set only the keys to change. A value that is sent is stored on the email, also if it is the same as the account value.
+type UpdateEmailSettingsOptions struct {
+	EmailSettings
+	Etag string `json:"etag,omitempty"`
+}
+
+// RootEmailSettings - email settings response
+type RootEmailSettings struct {
+	Data     EmailSettings  `json:"data"`
+	Etag     string         `json:"etag"`
+	Rejected *EmailRejected `json:"rejected,omitempty"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -354,6 +369,23 @@ func (s *emailService) ValidateBlock(ctx context.Context, block *CreateEmailBloc
 	}
 
 	root := new(EmailValidation)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// UpdateSettings - change the design settings of an email
+func (s *emailService) UpdateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*RootEmailSettings, *Response, error) {
+	path := fmt.Sprintf("%s/%s/settings", emailEndpoint, emailID)
+	req, err := s.client.newRequest(http.MethodPatch, path, settings)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailSettings)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

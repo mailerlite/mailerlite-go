@@ -78,6 +78,7 @@ MailerLite Golang SDK
         - [Move a block](#move-a-block)
         - [Delete a block](#delete-a-block)
         - [Validate a block](#validate-a-block)
+        - [Update the design settings of an email](#update-the-design-settings-of-an-email)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1897,6 +1898,48 @@ func main() {
 
 	if !result.Valid {
 		log.Print(result.Errors)
+	}
+}
+```
+
+### Update the design settings of an email
+
+Set only the keys to change. The API stores every value that you send on the email, also a value that is the same as the account value. An empty string unsets a value, and the email then uses the account value.
+
+If the API removes an unsafe value, the response has `Rejected` with the keys of the removed values.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	updated, _, err := client.Email.UpdateSettings(ctx, "email-id", &mailerlite.UpdateEmailSettingsOptions{
+		EmailSettings: mailerlite.EmailSettings{
+			Brand: &mailerlite.EmailBrandSettings{
+				Mode:            mailerlite.String(mailerlite.EmailBrandModeCustom),
+				BackgroundColor: mailerlite.String("#f4f4f4"),
+			},
+		},
+		Etag: "etag-from-the-last-read-or-write",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if updated.Rejected != nil {
+		log.Print(updated.Rejected.Keys)
 	}
 }
 ```
