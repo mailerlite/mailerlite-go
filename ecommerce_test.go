@@ -178,6 +178,13 @@ func TestEcommerceRequests(t *testing.T) {
 			_, err := c.Ecommerce.Import.Customers(ctx, "1", []mailerlite.CustomerParams{{Email: "a@b.test"}})
 			return err
 		}, http.MethodPost, shopURL + "/customers/import", `[{"email":"a@b.test"}]`},
+		{"import orders", func(c *mailerlite.Client) error {
+			_, err := c.Ecommerce.Import.Orders(ctx, "1", []mailerlite.CreateOrderParams{{
+				Customer: mailerlite.CustomerParams{Email: "a@b.test"},
+				Cart:     mailerlite.OrderCartParams{Items: []mailerlite.CartItemParams{{EcommerceProductID: "7"}}},
+			}})
+			return err
+		}, http.MethodPost, shopURL + "/orders/import", `{"orders":[{"customer":{"email":"a@b.test"},"cart":{"items":[{"ecommerce_product_id":"7"}]}}]}`},
 
 		{"campaign ecommerce stats", func(c *mailerlite.Client) error {
 			_, _, err := c.Campaign.EcommerceStats(ctx, "2", &mailerlite.EcommerceReportOptions{ShopID: "1"})

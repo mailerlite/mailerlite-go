@@ -1700,6 +1700,10 @@ _, err := client.Ecommerce.CartItem.Delete(ctx, "shop-id", "cart-id", "item-id")
 _, err := client.Ecommerce.Import.Products(ctx, "shop-id", []mailerlite.ProductParams{{Name: "Red T-shirt"}})
 _, err := client.Ecommerce.Import.Categories(ctx, "shop-id", []mailerlite.CategoryParams{{Name: "Hats"}})
 _, err := client.Ecommerce.Import.Customers(ctx, "shop-id", []mailerlite.CustomerParams{{Email: "customer@example.com"}})
+_, err := client.Ecommerce.Import.Orders(ctx, "shop-id", []mailerlite.CreateOrderParams{{
+	Customer: mailerlite.CustomerParams{Email: "customer@example.com"},
+	Cart:     mailerlite.OrderCartParams{Items: []mailerlite.CartItemParams{{EcommerceProductID: "product-id", Quantity: 1}}},
+}})
 ```
 
 ### Revenue reports and settings
