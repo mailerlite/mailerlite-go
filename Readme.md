@@ -69,6 +69,8 @@ MailerLite Golang SDK
         - [Get a list of timezones](#get-a-list-of-timezones)
     - [Campaign languages](#languages)
         - [Get a list of languages](#get-a-list-of-languages)
+    - [Emails](#emails)
+        - [Get an email](#get-an-email)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1601,6 +1603,40 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+```
+
+## Emails
+
+These endpoints work on emails built with the simple editor. Get the email ID from a campaign's `emails` array.
+
+Every write must send the `etag` that the last read or write of the email returned. If the email changed after that, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. Get the email again and use its new `etag`.
+
+### Get an email
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	email, _, err := client.Email.Get(ctx, "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(email.Etag)
 }
 ```
 
