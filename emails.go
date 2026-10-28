@@ -20,6 +20,7 @@ type EmailService interface {
 	UpdateBlock(ctx context.Context, emailID string, blockID string, block *UpdateEmailBlockOptions) (*RootEmailBlock, *Response, error)
 	MoveBlock(ctx context.Context, emailID string, blockID string, move *MoveEmailBlockOptions) (*RootEmailBlock, *Response, error)
 	DeleteBlock(ctx context.Context, emailID string, blockID string, etag string) (*RootEmailEtag, *Response, error)
+	ValidateBlock(ctx context.Context, block *CreateEmailBlockOptions) (*EmailValidation, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -205,6 +206,26 @@ type emailEtag struct {
 	Etag string `json:"etag"`
 }
 
+// EmailValidation - the result of a validation. Invalid input is still a successful request.
+type EmailValidation struct {
+	Valid    bool                `json:"valid"`
+	Errors   map[string][]string `json:"errors"`
+	Schema   EmailSchema         `json:"schema"`
+	Rejected *EmailRejected      `json:"rejected,omitempty"`
+}
+
+// EmailSchema - the version of the rules that the validation used
+type EmailSchema struct {
+	Version string `json:"version"`
+	Hash    string `json:"hash"`
+}
+
+// EmailRejected - the keys of unsafe values that the API removed or replaced
+type EmailRejected struct {
+	Message string   `json:"message"`
+	Keys    []string `json:"keys"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -316,6 +337,23 @@ func (s *emailService) DeleteBlock(ctx context.Context, emailID string, blockID 
 	}
 
 	root := new(RootEmailEtag)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// ValidateBlock - check a block against the rules of EmailService.CreateBlock. Nothing is saved.
+func (s *emailService) ValidateBlock(ctx context.Context, block *CreateEmailBlockOptions) (*EmailValidation, *Response, error) {
+	path := fmt.Sprintf("%s/blocks/validate", emailEndpoint)
+	req, err := s.client.newRequest(http.MethodPost, path, block)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(EmailValidation)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

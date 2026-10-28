@@ -77,6 +77,7 @@ MailerLite Golang SDK
         - [Update the content of a block](#update-the-content-of-a-block)
         - [Move a block](#move-a-block)
         - [Delete a block](#delete-a-block)
+        - [Validate a block](#validate-a-block)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1860,6 +1861,43 @@ func main() {
 	}
 
 	log.Print(deleted.Etag)
+}
+```
+
+### Validate a block
+
+This checks a block against the same rules as an insert, and saves nothing. Invalid content is a successful request, so check `Valid` and `Errors`.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	result, _, err := client.Email.ValidateBlock(ctx, &mailerlite.CreateEmailBlockOptions{
+		Type: mailerlite.EmailBlockTypeParagraph,
+		EditorContent: map[string]interface{}{
+			"attrs": map[string]interface{}{"textAlign": "center"},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !result.Valid {
+		log.Print(result.Errors)
+	}
 }
 ```
 

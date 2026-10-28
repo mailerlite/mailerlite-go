@@ -236,3 +236,34 @@ func TestCanDeleteEmailBlock(t *testing.T) {
 
 	assert.Equal(t, "43", root.Etag)
 }
+
+func TestCanValidateEmailBlock(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodPost, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/blocks/validate", req.URL.String())
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, `{"type":"paragraph","editor_content":{"attrs":{"textAlign":"sideways"}}}`, strings.TrimRight(string(b), "\r\n"))
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body: io.NopCloser(bytes.NewBufferString(`{"valid":false,"errors":{"editor_content.attrs.textAlign":["The value is not allowed."]},
+			"schema":{"version":"2.73.2","hash":"abc"}}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type:          mailerlite.EmailBlockTypeParagraph,
+		EditorContent: map[string]interface{}{"attrs": map[string]interface{}{"textAlign": "sideways"}},
+	}
+
+	result, _, err := client.Email.ValidateBlock(context.TODO(), block)
+	require.NoError(t, err)
+
+	assert.False(t, result.Valid)
+	assert.Equal(t, []string{"The value is not allowed."}, result.Errors["editor_content.attrs.textAlign"])
+	assert.Equal(t, "2.73.2", result.Schema.Version)
+	assert.Nil(t, result.Rejected)
+}
