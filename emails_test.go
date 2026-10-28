@@ -337,3 +337,29 @@ func TestCanValidateEmailSettings(t *testing.T) {
 	assert.False(t, result.Valid)
 	assert.Equal(t, []string{"Must be a whole number."}, result.Errors["button.border_radius"])
 }
+
+func TestCanCreateEmailTemplate(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodPost, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/templates", req.URL.String())
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, `{"name":"Newsletter"}`, strings.TrimRight(string(b), "\r\n"))
+		return &http.Response{
+			StatusCode: http.StatusCreated,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"data":{"id":"789","name":"Newsletter","type":"email","created_at":"2026-10-28 12:00:00"}}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	root, res, err := client.Email.CreateTemplate(context.TODO(), "123", &mailerlite.CreateEmailTemplateOptions{Name: "Newsletter"})
+	require.NoError(t, err)
+
+	assert.Equal(t, http.StatusCreated, res.StatusCode)
+	assert.Equal(t, "789", root.Data.ID)
+	assert.Equal(t, "Newsletter", root.Data.Name)
+	assert.Equal(t, "email", root.Data.Type)
+	assert.Equal(t, "2026-10-28 12:00:00", root.Data.CreatedAt)
+}

@@ -23,6 +23,7 @@ type EmailService interface {
 	ValidateBlock(ctx context.Context, block *CreateEmailBlockOptions) (*EmailValidation, *Response, error)
 	UpdateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*RootEmailSettings, *Response, error)
 	ValidateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*EmailValidation, *Response, error)
+	CreateTemplate(ctx context.Context, emailID string, template *CreateEmailTemplateOptions) (*RootEmailTemplate, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -242,6 +243,23 @@ type RootEmailSettings struct {
 	Rejected *EmailRejected `json:"rejected,omitempty"`
 }
 
+// CreateEmailTemplateOptions - modifies the behavior of EmailService.CreateTemplate method
+type CreateEmailTemplateOptions struct {
+	Name string `json:"name"`
+}
+
+// RootEmailTemplate - email template response
+type RootEmailTemplate struct {
+	Data EmailTemplate `json:"data"`
+}
+
+type EmailTemplate struct {
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Type      string `json:"type"`
+	CreatedAt string `json:"created_at"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -404,6 +422,23 @@ func (s *emailService) ValidateSettings(ctx context.Context, emailID string, set
 	}
 
 	root := new(EmailValidation)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// CreateTemplate - save an email as a template
+func (s *emailService) CreateTemplate(ctx context.Context, emailID string, template *CreateEmailTemplateOptions) (*RootEmailTemplate, *Response, error) {
+	path := fmt.Sprintf("%s/%s/templates", emailEndpoint, emailID)
+	req, err := s.client.newRequest(http.MethodPost, path, template)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailTemplate)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err

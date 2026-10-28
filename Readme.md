@@ -80,6 +80,7 @@ MailerLite Golang SDK
         - [Validate a block](#validate-a-block)
         - [Update the design settings of an email](#update-the-design-settings-of-an-email)
         - [Validate the design settings of an email](#validate-the-design-settings-of-an-email)
+        - [Save an email as a template](#save-an-email-as-a-template)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1978,6 +1979,36 @@ func main() {
 	if !result.Valid {
 		log.Print(result.Errors)
 	}
+}
+```
+
+### Save an email as a template
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	template, _, err := client.Email.CreateTemplate(ctx, "email-id", &mailerlite.CreateEmailTemplateOptions{
+		Name: "Newsletter",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(template.Data.ID)
 }
 ```
 
