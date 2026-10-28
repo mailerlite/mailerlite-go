@@ -74,6 +74,7 @@ MailerLite Golang SDK
         - [Get the HTML of an email](#get-the-html-of-an-email)
         - [Get a block of an email](#get-a-block-of-an-email)
         - [Insert a block into an email](#insert-a-block-into-an-email)
+        - [Update the content of a block](#update-the-content-of-a-block)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1750,6 +1751,47 @@ func main() {
 
 	// Use created.Etag for the next write to this email.
 	log.Print(created.Data.ID)
+}
+```
+
+### Update the content of a block
+
+`EditorContent` replaces the whole content of the block. Get the block first, change it, and send all of it back.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	block, _, err := client.Email.GetBlock(ctx, "email-id", "block-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	content := block.Data.EditorContent
+	content["attrs"] = map[string]interface{}{"textAlign": "center"}
+
+	updated, _, err := client.Email.UpdateBlock(ctx, "email-id", "block-id", &mailerlite.UpdateEmailBlockOptions{
+		EditorContent: content,
+		Etag:          block.Etag,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(updated.Etag)
 }
 ```
 

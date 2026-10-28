@@ -158,3 +158,31 @@ func TestCanCreateEmailBlock(t *testing.T) {
 	assert.Equal(t, "57", root.Data.ID)
 	assert.Equal(t, "43", root.Etag)
 }
+
+func TestCanUpdateEmailBlock(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodPatch, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/blocks/57", req.URL.String())
+		b, _ := io.ReadAll(req.Body)
+		assert.Equal(t, `{"editor_content":{"attrs":{"textAlign":"center"}},"etag":"42"}`, strings.TrimRight(string(b), "\r\n"))
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(testEmailBlock)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	block := &mailerlite.UpdateEmailBlockOptions{
+		EditorContent: map[string]interface{}{"attrs": map[string]interface{}{"textAlign": "center"}},
+		Etag:          "42",
+	}
+
+	root, _, err := client.Email.UpdateBlock(context.TODO(), "123", "57", block)
+	require.NoError(t, err)
+
+	assert.Equal(t, "57", root.Data.ID)
+	assert.Equal(t, "43", root.Etag)
+}
