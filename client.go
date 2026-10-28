@@ -56,6 +56,7 @@ type Client struct {
 	Timezone   TimezoneService   // Timezone service
 	Email      EmailService      // Email service
 	BrandStyle BrandStyleService // Brand style service
+	File       FileService       // File service
 
 }
 
@@ -129,6 +130,7 @@ func NewClient(apiKey string) *Client {
 	client.Timezone = &timezoneService{&client.common}
 	client.Email = &emailService{&client.common}
 	client.BrandStyle = &brandStyleService{&client.common}
+	client.File = &fileService{&client.common}
 
 	return client
 }

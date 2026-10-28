@@ -34,6 +34,8 @@ var (
 	SortByCreatedAtDescending          = "-created_at"
 	SortByUpdatedAt                    = "updated_at"
 	SortByUpdatedAtDescending          = "-updated_at"
+	SortBySize                         = "size"
+	SortBySizeDescending               = "-size"
 
 	FormTypePopup     = "popup"
 	FormTypeEmbedded  = "embedded"
@@ -68,6 +70,10 @@ var (
 	EmailBrandModeAccount  = "account"
 	EmailBrandModeTemplate = "template"
 	EmailBrandModeCustom   = "custom"
+
+	FileTypeImage = "image"
+	FileTypePDF   = "pdf"
+	FileTypeEpub  = "epub"
 )
 
 type Meta struct {

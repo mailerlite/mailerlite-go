@@ -86,6 +86,8 @@ MailerLite Golang SDK
         - [Restore a version of an email](#restore-a-version-of-an-email)
     - [Brand styles](#brand-styles)
         - [Get the brand styles](#get-the-brand-styles)
+    - [Files](#files)
+        - [Get a list of files](#get-a-list-of-files)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -2141,6 +2143,50 @@ func main() {
 
 	for _, preset := range styles.Data.Presets {
 		log.Print(preset.Identifier)
+	}
+}
+```
+
+## Files
+
+### Get a list of files
+
+Use a file URL to put an image into an email block. You can filter by `name` (partial match) and `type` (`image`, `pdf` or `epub`).
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListFileOptions{
+		Filters: &[]mailerlite.Filter{{
+			Name:  "type",
+			Value: mailerlite.FileTypeImage,
+		}},
+		Sort:  mailerlite.SortByCreatedAtDescending,
+		Page:  1,
+		Limit: 10,
+	}
+
+	files, _, err := client.File.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files.Data {
+		log.Print(file.URL)
 	}
 }
 ```
