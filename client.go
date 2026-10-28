@@ -330,8 +330,12 @@ func addOptions(s string, opt interface{}) (string, error) {
 				}
 				// fv is a Filter formatted as "{name value}". Split at the first space only,
 				// because the value can contain spaces and braces.
+				// Do not use strings.Cut: the SDK supports Go 1.17, which does not have it.
 				fv = strings.TrimSuffix(strings.TrimPrefix(fv, "{"), "}")
-				name, value, _ := strings.Cut(fv, " ")
+				name, value := fv, ""
+				if i := strings.Index(fv, " "); i >= 0 {
+					name, value = fv[:i], fv[i+1:]
+				}
 				origValues.Add(fmt.Sprintf("filter[%s]", name), value)
 			}
 			continue
