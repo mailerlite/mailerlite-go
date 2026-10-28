@@ -1632,7 +1632,7 @@ To get a simple editor email, create a campaign with `Editor: mailerlite.EmailEd
 
 Every write must send the `etag` that the last read or write of the email returned. If the etag is empty, the SDK returns `mailerlite.ErrEmptyEtag` and sends no request. If the email changed after that read or write, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. The `Etag` field of the `*mailerlite.ErrorResponse` contains the current etag of the email.
 
-If an email, block or version ID is empty, the SDK returns `mailerlite.ErrEmptyID` and sends no request.
+If an email, block or version ID is empty, the SDK returns `mailerlite.ErrEmptyID` and sends no request. If an ID contains a character that is not a digit, the SDK returns `mailerlite.ErrInvalidID` and sends no request.
 
 ### Create a campaign with the simple editor
 

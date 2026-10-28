@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/url"
 )
 
 const emailEndpoint = "/emails"
@@ -16,6 +15,9 @@ const ErrorCodeVersionConflict = "version_conflict"
 var (
 	// ErrEmptyID - an email, block or version ID is empty. The SDK sends no request.
 	ErrEmptyID = errors.New("mailerlite: the ID must not be empty")
+
+	// ErrInvalidID - an email, block or version ID contains a character that is not a digit. The SDK sends no request.
+	ErrInvalidID = errors.New("mailerlite: the ID must contain only digits")
 
 	// ErrEmptyEtag - a write has no etag. The SDK sends no request.
 	ErrEmptyEtag = errors.New("mailerlite: the etag must not be empty")
@@ -620,14 +622,20 @@ func (s *emailService) RestoreVersion(ctx context.Context, emailID string, versi
 	return root, res, nil
 }
 
-// emailPath - build a path under emailEndpoint from format. It escapes each ID and returns ErrEmptyID if an ID is empty.
+// emailPath - build a path under emailEndpoint from format. Each ID must contain only digits,
+// because the API decodes an escaped "/" in the path and then routes the request to a different endpoint.
 func emailPath(format string, ids ...string) (string, error) {
 	args := make([]interface{}, len(ids))
 	for i, id := range ids {
 		if id == "" {
 			return "", ErrEmptyID
 		}
-		args[i] = url.PathEscape(id)
+		for _, r := range id {
+			if r < '0' || r > '9' {
+				return "", ErrInvalidID
+			}
+		}
+		args[i] = id
 	}
 
 	return emailEndpoint + fmt.Sprintf(format, args...), nil

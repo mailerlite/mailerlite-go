@@ -549,21 +549,27 @@ func TestEmailMethodsRejectEmptyID(t *testing.T) {
 	}
 }
 
-func TestEmailEscapesIDs(t *testing.T) {
+func TestEmailMethodsRejectNonNumericID(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
 	testClient := NewTestClient(func(req *http.Request) *http.Response {
-		assert.Equal(t, "https://connect.mailerlite.com/api/emails/1%2F2%3Fa=b/blocks/3", req.URL.String())
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(testEmailBlock)),
-		}
+		t.Errorf("unexpected request: %v %v", req.Method, req.URL)
+		return nil
 	})
 
 	client.SetHttpClient(testClient)
 
-	_, _, err := client.Email.GetBlock(context.TODO(), "1/2?a=b", "3")
-	require.NoError(t, err)
+	ctx := context.TODO()
+	for _, id := range []string{"123/html", "123%2Fhtml", "../123", "123?a=b", " 123", "-1", "1e3"} {
+		_, _, err := client.Email.Get(ctx, id)
+		assert.ErrorIs(t, err, mailerlite.ErrInvalidID, "Get %q", id)
+
+		_, _, err = client.Email.GetBlock(ctx, "123", id)
+		assert.ErrorIs(t, err, mailerlite.ErrInvalidID, "GetBlock %q", id)
+
+		_, _, err = client.Email.RestoreVersion(ctx, "123", id, "42")
+		assert.ErrorIs(t, err, mailerlite.ErrInvalidID, "RestoreVersion %q", id)
+	}
 }
 
 func TestEmailWriteReturnsVersionConflict(t *testing.T) {
