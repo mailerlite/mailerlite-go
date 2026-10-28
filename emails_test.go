@@ -387,3 +387,36 @@ func TestCanCreateEmailVersion(t *testing.T) {
 		assert.True(t, root.Data.Current)
 	}
 }
+
+func TestCanListEmailVersions(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodGet, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/versions?limit=10&page=2", req.URL.String())
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body: io.NopCloser(bytes.NewBufferString(`{"data":[{"id":"5","created_at":"2026-10-28 12:00:00","current":true},{"id":"4","created_at":"2026-10-27 12:00:00","current":false}],
+			"links":{"first":"https://connect.mailerlite.com/api/emails/123/versions?page=1","last":null,"prev":null,"next":null},
+			"meta":{"current_page":2,"from":11,"last_page":2,"links":[{"url":null,"label":"1","page":1,"active":false}],"path":"https://connect.mailerlite.com/api/emails/123/versions","per_page":10,"to":12,"total":12}}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	options := &mailerlite.ListEmailVersionOptions{
+		EmailID: "123",
+		Page:    2,
+		Limit:   10,
+	}
+
+	root, _, err := client.Email.ListVersions(context.TODO(), options)
+	require.NoError(t, err)
+
+	require.Len(t, root.Data, 2)
+	assert.Equal(t, "5", root.Data[0].ID)
+	assert.True(t, root.Data[0].Current)
+	assert.False(t, root.Data[1].Current)
+	assert.Equal(t, 12, root.Meta.Total)
+	assert.True(t, root.Links.IsLastPage())
+}

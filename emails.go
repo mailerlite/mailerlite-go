@@ -25,6 +25,7 @@ type EmailService interface {
 	ValidateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*EmailValidation, *Response, error)
 	CreateTemplate(ctx context.Context, emailID string, template *CreateEmailTemplateOptions) (*RootEmailTemplate, *Response, error)
 	CreateVersion(ctx context.Context, emailID string) (*RootEmailVersion, *Response, error)
+	ListVersions(ctx context.Context, options *ListEmailVersionOptions) (*RootEmailVersions, *Response, error)
 }
 
 // emailService implements EmailService.
@@ -273,6 +274,20 @@ type EmailVersion struct {
 	Current   bool   `json:"current"`
 }
 
+// RootEmailVersions - email versions response
+type RootEmailVersions struct {
+	Data  []EmailVersion `json:"data"`
+	Links Links          `json:"links"`
+	Meta  Meta           `json:"meta"`
+}
+
+// ListEmailVersionOptions - modifies the behavior of EmailService.ListVersions method
+type ListEmailVersionOptions struct {
+	EmailID string `url:"-"`
+	Page    int    `url:"page,omitempty"`
+	Limit   int    `url:"limit,omitempty"`
+}
+
 // Get - get a single email with its blocks and settings
 func (s *emailService) Get(ctx context.Context, emailID string) (*RootEmailDocument, *Response, error) {
 	path := fmt.Sprintf("%s/%s", emailEndpoint, emailID)
@@ -470,6 +485,23 @@ func (s *emailService) CreateVersion(ctx context.Context, emailID string) (*Root
 	}
 
 	root := new(RootEmailVersion)
+	res, err := s.client.do(ctx, req, root)
+	if err != nil {
+		return nil, res, err
+	}
+
+	return root, res, nil
+}
+
+// ListVersions - list the saved versions of an email, newest first
+func (s *emailService) ListVersions(ctx context.Context, options *ListEmailVersionOptions) (*RootEmailVersions, *Response, error) {
+	path := fmt.Sprintf("%s/%s/versions", emailEndpoint, options.EmailID)
+	req, err := s.client.newRequest(http.MethodGet, path, options)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	root := new(RootEmailVersions)
 	res, err := s.client.do(ctx, req, root)
 	if err != nil {
 		return nil, res, err
