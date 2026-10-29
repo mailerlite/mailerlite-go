@@ -30,7 +30,6 @@ func (r *Response) IsIdempotentReplay() bool {
 	return r != nil && r.Response != nil && strings.EqualFold(strings.TrimSpace(r.Header.Get(HeaderIdempotentReplayed)), "true")
 }
 
-// setIdempotencyKey - set the Idempotency-Key header from the context of req, if the context has a key
 func setIdempotencyKey(req *http.Request) error {
 	key, ok := req.Context().Value(idempotencyKeyContextKey{}).(string)
 	if !ok {

@@ -225,7 +225,6 @@ type RootEmailEtag struct {
 	Etag string `json:"etag"`
 }
 
-// emailEtag - request body for writes that send only the etag
 type emailEtag struct {
 	Etag string `json:"etag"`
 }
@@ -642,8 +641,7 @@ func (s *emailService) RestoreVersion(ctx context.Context, emailID string, versi
 	return root, res, nil
 }
 
-// emailPath - build a path under emailEndpoint from format. Each ID must contain only digits,
-// because the API decodes an escaped "/" in the path and then routes the request to a different endpoint.
+// Each ID must contain only digits. The API decodes an escaped "/" in the path and routes to a different endpoint.
 func emailPath(format string, ids ...string) (string, error) {
 	args := make([]interface{}, len(ids))
 	for i, id := range ids {
@@ -656,7 +654,6 @@ func emailPath(format string, ids ...string) (string, error) {
 	return emailEndpoint + fmt.Sprintf(format, args...), nil
 }
 
-// checkEmailID - return ErrEmptyID if id is empty, and ErrInvalidID if id contains a character that is not a digit
 func checkEmailID(id string) error {
 	if id == "" {
 		return ErrEmptyID
@@ -670,7 +667,7 @@ func checkEmailID(id string) error {
 	return nil
 }
 
-// blockToSend - return block, or a copy of block with the placement from positionToSend. block does not change.
+// The block of the caller does not change.
 func blockToSend(block *CreateEmailBlockOptions) (*CreateEmailBlockOptions, error) {
 	if block == nil || block.Placement == nil {
 		return block, nil
@@ -686,10 +683,7 @@ func blockToSend(block *CreateEmailBlockOptions) (*CreateEmailBlockOptions, erro
 	return &sent, nil
 }
 
-// positionToSend - check the BlockID of position and return the position to send.
 // The API uses BlockID only for "before" and "after", and discards it without a check for "start" and "end".
-// For these two positions, the SDK does not check BlockID and removes it.
-// For other positions, the SDK checks BlockID if it is set, and sends it.
 func positionToSend(position EmailBlockPosition) (EmailBlockPosition, error) {
 	switch position.Position {
 	case EmailBlockPositionStart, EmailBlockPositionEnd:
