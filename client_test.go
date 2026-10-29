@@ -347,6 +347,52 @@ func TestWillHandleMultipleAPIFilters(t *testing.T) {
 	assert.Equal(t, subscribers.Data[0].Status, "active")
 }
 
+func TestWillHandleAPIFiltersWithSpaces(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, "https://connect.mailerlite.com/api/groups?filter%5Bname%5D=My+Value", req.URL.String())
+
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Request:    req,
+			Body:       io.NopCloser(strings.NewReader(`{"data": []}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	listOptions := &mailerlite.ListGroupOptions{
+		Filters: &[]mailerlite.Filter{{Name: "name", Value: "My Value"}},
+	}
+
+	_, _, err := client.Group.List(context.TODO(), listOptions)
+	assert.NoError(t, err)
+}
+
+func TestWillHandleNonStringAPIFilters(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, "https://connect.mailerlite.com/api/groups?filter%5Bcount%5D=5", req.URL.String())
+
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Request:    req,
+			Body:       io.NopCloser(strings.NewReader(`{"data": []}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	listOptions := &mailerlite.ListGroupOptions{
+		Filters: &[]mailerlite.Filter{{Name: "count", Value: 5}},
+	}
+
+	_, _, err := client.Group.List(context.TODO(), listOptions)
+	assert.NoError(t, err)
+}
+
 func TestWillHandleAPIAuthError(t *testing.T) {
 
 	client := mailerlite.NewClient(testKey)

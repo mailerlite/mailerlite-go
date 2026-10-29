@@ -331,27 +331,22 @@ func addOptions(s string, opt interface{}) (string, error) {
 
 	for k, v := range newValues {
 		if k == "Filters" {
-			for _, fv := range v {
-				if fv == "" {
-					continue
-				}
-				// fv is a Filter formatted as "{name value}". Split at the first space only,
-				// because the value can contain spaces and braces.
-				// Do not use strings.Cut: the SDK supports Go 1.17, which does not have it.
-				fv = strings.TrimSuffix(strings.TrimPrefix(fv, "{"), "}")
-				name, value := fv, ""
-				if i := strings.Index(fv, " "); i >= 0 {
-					name, value = fv[:i], fv[i+1:]
-				}
-				origValues.Add(fmt.Sprintf("filter[%s]", name), value)
-			}
 			continue
-		} else {
-			for _, fv := range v {
-				if fv == "" {
-					continue
+		}
+		for _, fv := range v {
+			if fv == "" {
+				continue
+			}
+			origValues.Add(k, fv)
+		}
+	}
+
+	if s := reflect.Indirect(v); s.Kind() == reflect.Struct {
+		if f := s.FieldByName("Filters"); f.IsValid() {
+			if filters, ok := f.Interface().(*[]Filter); ok && filters != nil {
+				for _, filter := range *filters {
+					origValues.Add(fmt.Sprintf("filter[%s]", filter.Name), fmt.Sprint(filter.Value))
 				}
-				origValues.Add(k, fv)
 			}
 		}
 	}
