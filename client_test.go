@@ -557,14 +557,32 @@ func TestDoesNotSendIdempotencyKeyByDefault(t *testing.T) {
 	assert.False(t, res.IsIdempotentReplay())
 }
 
+func TestIdempotentReplayIgnoresCaseAndSpaces(t *testing.T) {
+	for _, value := range []string{"true", "True", "TRUE", " true "} {
+		res := &mailerlite.Response{Response: &http.Response{
+			Header: http.Header{mailerlite.HeaderIdempotentReplayed: []string{value}},
+		}}
+		assert.True(t, res.IsIdempotentReplay(), value)
+	}
+
+	for _, value := range []string{"", "false", "1"} {
+		res := &mailerlite.Response{Response: &http.Response{
+			Header: http.Header{mailerlite.HeaderIdempotentReplayed: []string{value}},
+		}}
+		assert.False(t, res.IsIdempotentReplay(), value)
+	}
+}
+
 func TestRejectsInvalidIdempotencyKey(t *testing.T) {
 	keys := map[string]string{
-		"empty":         "",
-		"too long":      strings.Repeat("a", 256),
-		"new line":      "key\nX-Injected: 1",
-		"tab":           "key\tvalue",
-		"not ASCII":     "clé",
-		"delete (0x7f)": "key\x7f",
+		"empty":          "",
+		"too long":       strings.Repeat("a", 256),
+		"new line":       "key\nX-Injected: 1",
+		"tab":            "key\tvalue",
+		"not ASCII":      "clé",
+		"delete (0x7f)":  "key\x7f",
+		"leading space":  " key",
+		"trailing space": "key ",
 	}
 
 	for name, key := range keys {

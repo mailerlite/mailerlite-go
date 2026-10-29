@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 )
 
-// ErrInvalidIdempotencyKey - the idempotency key is empty, longer than 255 characters, or contains a character
-// that is not printable ASCII. The SDK sends no request.
-var ErrInvalidIdempotencyKey = errors.New("mailerlite: the idempotency key must be 1 to 255 printable ASCII characters")
+// ErrInvalidIdempotencyKey - the idempotency key is empty, longer than 255 characters, contains a character
+// that is not printable ASCII, or starts or ends with a space. The SDK sends no request.
+var ErrInvalidIdempotencyKey = errors.New("mailerlite: the idempotency key must be 1 to 255 printable ASCII characters, with no space at the start or the end")
 
 type idempotencyKeyContextKey struct{}
 
@@ -23,9 +24,10 @@ func WithIdempotencyKey(ctx context.Context, key string) context.Context {
 	return context.WithValue(ctx, idempotencyKeyContextKey{}, key)
 }
 
-// IsIdempotentReplay - true if the API returned the stored response of an earlier request with the same idempotency key
+// IsIdempotentReplay - true if the API returned the stored response of an earlier request with the same idempotency key.
+// The check ignores letter case and spaces at the start and the end of the header value.
 func (r *Response) IsIdempotentReplay() bool {
-	return r != nil && r.Response != nil && r.Header.Get(HeaderIdempotentReplayed) == "true"
+	return r != nil && r.Response != nil && strings.EqualFold(strings.TrimSpace(r.Header.Get(HeaderIdempotentReplayed)), "true")
 }
 
 // setIdempotencyKey - set the Idempotency-Key header from the context of req, if the context has a key
@@ -36,6 +38,10 @@ func setIdempotencyKey(req *http.Request) error {
 	}
 
 	if len(key) == 0 || len(key) > 255 {
+		return ErrInvalidIdempotencyKey
+	}
+	// net/http removes spaces at the start and the end of a header value. The API then gets a different key.
+	if key[0] == ' ' || key[len(key)-1] == ' ' {
 		return ErrInvalidIdempotencyKey
 	}
 	for i := 0; i < len(key); i++ {

@@ -2175,7 +2175,7 @@ func main() {
 If a write fails with a network error, you do not know if the API did the write. Send the write with an idempotency key, and retry it with the same key and the same request. If the first request succeeded, the API returns the stored response again and does not do the write two times.
 
 - Use a new key for each write. The API keeps a key for 24 hours.
-- The key must be 1 to 255 printable ASCII characters. Otherwise the SDK returns `mailerlite.ErrInvalidIdempotencyKey` and sends no request.
+- The key must be 1 to 255 printable ASCII characters, and must not start or end with a space. Otherwise the SDK returns `mailerlite.ErrInvalidIdempotencyKey` and sends no request.
 - The same key with a different request returns a `422` error. If the first request is still running, the API returns a `409` error without a code.
 - The API uses the key only for the POST, PATCH and DELETE requests of `client.Email`, except the validate methods.
 
