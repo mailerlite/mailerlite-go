@@ -69,6 +69,13 @@ MailerLite Golang SDK
         - [Get a list of timezones](#get-a-list-of-timezones)
     - [Campaign languages](#languages)
         - [Get a list of languages](#get-a-list-of-languages)
+    - [E-commerce](#e-commerce)
+        - [Shops](#shops)
+        - [Products and variants](#products-and-variants)
+        - [Categories](#categories)
+        - [Customers, orders and carts](#customers-orders-and-carts)
+        - [Imports](#imports)
+        - [Revenue reports and settings](#revenue-reports-and-settings)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -102,9 +109,9 @@ func main() {
 
 	listOptions := &mailerlite.ListSubscriberOptions{
 		Limit:  200,
-		Page:   0, 
+		Page:   0,
 		Filters: &[]mailerlite.Filter{{
-			Name:  "status", 
+			Name:  "status",
 			Value: "active",
 		}},
 	}
@@ -482,7 +489,7 @@ func main() {
 			Value: "active",
 		}},
 	}
-		
+
 	subscribers, _, err := client.Group.Subscribers(ctx, listSubscriberOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -695,7 +702,7 @@ func main() {
 			Value: "active",
 		}},
 	}
-	
+
 	_, _, err := client.Segment.Subscribers(ctx, listSubscriberOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -733,7 +740,7 @@ func main() {
 		}},
 		Sort:   mailerlite.SortByName,
 	}
-	
+
 	_, _, err := client.Field.List(ctx, listOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -849,7 +856,7 @@ func main() {
 		Page:  1,
 		Limit: 10,
 	}
-	
+
 	_, _, err := client.Automation.List(ctx, listOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -1000,7 +1007,7 @@ func main() {
 		Page:  1,
 		Limit: 10,
 	}
-	
+
 	_, _, err := client.Campaign.List(ctx, listOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -1061,13 +1068,13 @@ func main() {
 			Content:  "<p>This is the HTML content</p>",
 		},
 	}
-	
+
 	campaign := &mailerlite.CreateCampaign{
 		Name:   "Campaign Name",
 		Type:   mailerlite.CampaignTypeRegular,
 		Emails: *emails,
 	}
-	
+
 	_, _, err := client.Campaign.Create(ctx, campaign)
 	if err != nil {
 		log.Fatal(err)
@@ -1102,13 +1109,13 @@ func main() {
 			Content:  "<p>This is the HTML content</p>",
 		},
 	}
-	
+
 	campaign := &mailerlite.UpdateCampaign{
 		Name:   "Campaign Name",
 		Type:   mailerlite.CampaignTypeRegular,
 		Emails: *emails,
 	}
-	
+
 	_, _, err := client.Campaign.Update(ctx, "campaign-id", campaign)
 	if err != nil {
 		log.Fatal(err)
@@ -1138,7 +1145,7 @@ func main() {
 	schedule := &mailerlite.ScheduleCampaign{
 		Delivery: mailerlite.CampaignScheduleTypeInstant,
 	}
-	
+
 	_, _, err := client.Campaign.Schedule(ctx, "campaign-id", schedule)
 	if err != nil {
 		log.Fatal(err)
@@ -1271,7 +1278,7 @@ func main() {
       	}},
 		Sort:   mailerlite.SortByName,
 	}
-	
+
 	_, _, err := client.Form.List(ctx, listOptions)
 	if err != nil {
 		log.Fatal(err)
@@ -1482,7 +1489,7 @@ func main() {
 		Events: []string{"subscriber.bounced"},
 		Url:    "https://example.com/webhook",
 	}
-	
+
 	_, _, err := client.Webhook.Create(ctx, options)
 	if err != nil {
 		log.Fatal(err)
@@ -1514,7 +1521,7 @@ func main() {
 		Events:    []string{"subscriber.bounced", "subscriber.unsubscribed"},
 		Name:      "Update",
 	}
-	
+
 	_, _, err := client.Webhook.Update(ctx, options)
 	if err != nil {
 		log.Fatal(err)
@@ -1602,6 +1609,119 @@ func main() {
 		log.Fatal(err)
 	}
 }
+```
+
+## E-commerce
+
+Every e-commerce call takes the shop ID. The examples below assume this setup:
+
+```go
+client := mailerlite.NewClient(APIToken)
+ctx := context.TODO()
+```
+
+### Shops
+
+```go
+shops, _, err := client.Ecommerce.Shop.List(ctx, &mailerlite.ListEcommerceOptions{Limit: 25})
+shop, _, err := client.Ecommerce.Shop.Get(ctx, "shop-id")
+shop, _, err := client.Ecommerce.Shop.Create(ctx, &mailerlite.ShopParams{Name: "My shop", Url: "https://shop.example.com", Currency: "EUR"})
+shop, _, err := client.Ecommerce.Shop.Update(ctx, "shop-id", &mailerlite.ShopParams{Name: "New name"})
+_, err := client.Ecommerce.Shop.Delete(ctx, "shop-id")
+```
+
+### Products and variants
+
+```go
+products, _, err := client.Ecommerce.Product.List(ctx, "shop-id", &mailerlite.ListProductOptions{
+	Filters: &[]mailerlite.Filter{{Name: "enabled", Value: true}},
+	Sort:    "-created_at",
+})
+product, _, err := client.Ecommerce.Product.Get(ctx, "shop-id", "product-id")
+product, _, err := client.Ecommerce.Product.Create(ctx, "shop-id", &mailerlite.ProductParams{Name: "Red T-shirt"})
+product, _, err := client.Ecommerce.Product.Update(ctx, "shop-id", "product-id", &mailerlite.ProductParams{Name: "Blue T-shirt"})
+_, err := client.Ecommerce.Product.Delete(ctx, "shop-id", "product-id")
+product, _, err := client.Ecommerce.Product.ChangeStatus(ctx, "shop-id", "product-id", false)
+product, _, err := client.Ecommerce.Product.AssignCategories(ctx, "shop-id", "product-id", []string{"category-id"}, true)
+
+variants, _, err := client.Ecommerce.ProductVariant.List(ctx, "shop-id", "product-id")
+product, _, err := client.Ecommerce.ProductVariant.Sync(ctx, "shop-id", "product-id", []mailerlite.ProductVariantParams{
+	{Name: "Large", Attributes: map[string]string{"size": "L"}, ResourceID: "variant-l"},
+})
+product, _, err := client.Ecommerce.ProductVariant.Update(ctx, "shop-id", "product-id", "variant-id", &mailerlite.ProductVariantParams{Name: "Extra large", Attributes: map[string]string{"size": "XL"}})
+_, err := client.Ecommerce.ProductVariant.Delete(ctx, "shop-id", "product-id", "variant-id")
+```
+
+### Categories
+
+```go
+categories, _, err := client.Ecommerce.Category.List(ctx, "shop-id", nil)
+category, _, err := client.Ecommerce.Category.Get(ctx, "shop-id", "category-id")
+category, _, err := client.Ecommerce.Category.Create(ctx, "shop-id", &mailerlite.CategoryParams{Name: "Hats"})
+category, _, err := client.Ecommerce.Category.Update(ctx, "shop-id", "category-id", &mailerlite.CategoryParams{Name: "Caps"})
+_, err := client.Ecommerce.Category.Delete(ctx, "shop-id", "category-id")
+
+products, _, err := client.Ecommerce.Category.Products(ctx, "shop-id", "category-id", nil)
+_, err := client.Ecommerce.Category.AssignProduct(ctx, "shop-id", "category-id", "product-id")
+_, err := client.Ecommerce.Category.UnassignProduct(ctx, "shop-id", "category-id", "product-id")
+```
+
+### Customers, orders and carts
+
+```go
+customers, _, err := client.Ecommerce.Customer.List(ctx, "shop-id", &mailerlite.ListEcommerceOptions{
+	Filters: &[]mailerlite.Filter{{Name: "email", Value: "customer@example.com"}},
+})
+customer, _, err := client.Ecommerce.Customer.Create(ctx, "shop-id", &mailerlite.CustomerParams{Email: "customer@example.com"})
+customer, _, err := client.Ecommerce.Customer.Update(ctx, "shop-id", "customer-id", &mailerlite.CustomerParams{Name: "Jane"})
+_, err := client.Ecommerce.Customer.Delete(ctx, "shop-id", "customer-id")
+
+orders, _, err := client.Ecommerce.Order.List(ctx, "shop-id", &mailerlite.ListEcommerceOptions{
+	Filters: &[]mailerlite.Filter{{Name: "attributed", Value: true}},
+})
+order, _, err := client.Ecommerce.Order.Create(ctx, "shop-id", &mailerlite.CreateOrderParams{
+	Customer: mailerlite.CustomerParams{Email: "customer@example.com"},
+	Cart:     mailerlite.OrderCartParams{Items: []mailerlite.CartItemParams{{EcommerceProductID: "product-id", Quantity: 1}}},
+	Status:   "complete",
+})
+order, _, err := client.Ecommerce.Order.Update(ctx, "shop-id", "order-id", &mailerlite.UpdateOrderParams{Status: "complete"})
+_, err := client.Ecommerce.Order.Delete(ctx, "shop-id", "order-id")
+
+carts, _, err := client.Ecommerce.Cart.List(ctx, "shop-id", nil)
+cart, _, err := client.Ecommerce.Cart.Update(ctx, "shop-id", "cart-id", &mailerlite.UpdateCartParams{CheckoutUrl: "https://shop.example.com/cart"})
+items, _, err := client.Ecommerce.CartItem.List(ctx, "shop-id", "cart-id", nil)
+item, _, err := client.Ecommerce.CartItem.Update(ctx, "shop-id", "cart-id", "item-id", &mailerlite.CartItemParams{Quantity: 2})
+_, err := client.Ecommerce.CartItem.Delete(ctx, "shop-id", "cart-id", "item-id")
+```
+
+### Imports
+
+```go
+_, err := client.Ecommerce.Import.Products(ctx, "shop-id", []mailerlite.ProductParams{{Name: "Red T-shirt"}})
+_, err := client.Ecommerce.Import.Categories(ctx, "shop-id", []mailerlite.CategoryParams{{Name: "Hats"}})
+_, err := client.Ecommerce.Import.Customers(ctx, "shop-id", []mailerlite.CustomerParams{{Email: "customer@example.com"}})
+_, err := client.Ecommerce.Import.Orders(ctx, "shop-id", []mailerlite.CreateOrderParams{{
+	Customer: mailerlite.CustomerParams{Email: "customer@example.com"},
+	Cart:     mailerlite.OrderCartParams{Items: []mailerlite.CartItemParams{{EcommerceProductID: "product-id", Quantity: 1}}},
+}})
+```
+
+### Revenue reports and settings
+
+```go
+stats, _, err := client.Ecommerce.Shop.Stats(ctx, "shop-id", &mailerlite.ShopStatsOptions{StartDate: "2026-10-01", EndDate: "2026-10-31"})
+
+stats, _, err := client.Campaign.EcommerceStats(ctx, "campaign-id", &mailerlite.EcommerceReportOptions{ShopID: "shop-id"})
+orders, _, err := client.Campaign.EcommerceOrders(ctx, "campaign-id", &mailerlite.EcommerceReportOptions{ShopID: "shop-id"})
+
+stats, _, err := client.Subscriber.EcommerceStats(ctx, "subscriber-id", &mailerlite.EcommerceReportOptions{ShopID: "shop-id"})
+orders, _, err := client.Subscriber.EcommerceOrders(ctx, "subscriber-id", &mailerlite.EcommerceReportOptions{ShopID: "shop-id"})
+
+stats, _, err := client.Automation.EcommerceStats(ctx, "automation-id", nil)
+stats, _, err := client.Automation.EmailEcommerceStats(ctx, "automation-id", "email-id", nil)
+orders, _, err := client.Automation.EcommerceOrders(ctx, "automation-id", &mailerlite.AutomationEcommerceOrderOptions{TimeFrame: "all_time"})
+
+settings, _, err := client.Ecommerce.Setting.Get(ctx)
 ```
 
 # Testing
