@@ -84,7 +84,9 @@ type EmailBlockPlacement struct {
 // EmailSettings - the design settings of an email.
 //
 // All fields are pointers so that an update sends only the keys that you set.
-// An empty string unsets a value, and the email then uses the account value.
+// An empty string unsets a brand colour, and the email then uses the account value.
+// To unset a footer text, send an empty EditorContent map. Other colours, sizes,
+// Button.BorderRadius and Brand.Style cannot be empty: an empty string gives a 422 error.
 type EmailSettings struct {
 	Brand      *EmailBrandSettings      `json:"brand,omitempty"`
 	Layout     *EmailLayoutSettings     `json:"layout,omitempty"`

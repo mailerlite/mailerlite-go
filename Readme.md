@@ -1967,7 +1967,11 @@ func main() {
 
 ### Update the design settings of an email
 
-Set only the keys to change. The API stores every value that you send on the email, also a value that is the same as the account value. An empty string unsets a value, and the email then uses the account value.
+Set only the keys to change. The API stores every value that you send on the email, also a value that is the same as the account value.
+
+- To unset a brand colour, send an empty string. The API stores the value empty, and the email then uses the account value.
+- To unset a footer text, send an empty editor document: an empty `EditorContent` map, or a map with an empty `content` list.
+- Other colours, sizes, `Button.BorderRadius` and `Brand.Style` cannot be empty. An empty string gives a `422` error.
 
 If the API removes an unsafe value, the response has `Rejected` with the keys of the removed values.
 
