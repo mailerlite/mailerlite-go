@@ -77,3 +77,45 @@ func TestCreateCampaignOmitsEmptyEmailFields(t *testing.T) {
 	_, _, err := client.Campaign.Create(context.TODO(), campaign)
 	require.NoError(t, err)
 }
+
+func TestCanCancelCampaignWithoutBody(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodPost, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/campaigns/1/cancel", req.URL.String())
+		b, err := io.ReadAll(req.Body)
+		assert.NoError(t, err)
+		assert.Len(t, b, 0)
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"data":{"id":"1"}}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	_, _, err := client.Campaign.Cancel(context.TODO(), "1")
+	require.NoError(t, err)
+}
+
+func TestCanDeleteCampaignWithoutBody(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		assert.Equal(t, http.MethodDelete, req.Method)
+		assert.Equal(t, "https://connect.mailerlite.com/api/campaigns/1", req.URL.String())
+		b, err := io.ReadAll(req.Body)
+		assert.NoError(t, err)
+		assert.Len(t, b, 0)
+		return &http.Response{
+			StatusCode: http.StatusNoContent,
+			Body:       io.NopCloser(bytes.NewBufferString(``)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	_, err := client.Campaign.Delete(context.TODO(), "1")
+	require.NoError(t, err)
+}

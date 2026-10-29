@@ -20,3 +20,25 @@ func TestNewRequestEncodesPatchBody(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, `{"etag":"1"}`, strings.TrimRight(string(b), "\r\n"))
 }
+
+func TestNewRequestSendsNoBodyForNilBody(t *testing.T) {
+	client := NewClient("valid-api-key")
+
+	bodies := map[string]interface{}{
+		"nil":         nil,
+		"nil pointer": (*CreateCampaign)(nil),
+		"nil map":     map[string]string(nil),
+	}
+
+	for name, body := range bodies {
+		t.Run(name, func(t *testing.T) {
+			req, err := client.newRequest(http.MethodPost, "/emails/1/versions", body)
+			require.NoError(t, err)
+
+			b, err := io.ReadAll(req.Body)
+			require.NoError(t, err)
+			assert.Len(t, b, 0)
+			assert.Equal(t, int64(0), req.ContentLength)
+		})
+	}
+}

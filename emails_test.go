@@ -371,6 +371,9 @@ func TestCanCreateEmailVersion(t *testing.T) {
 		testClient := NewTestClient(func(req *http.Request) *http.Response {
 			assert.Equal(t, http.MethodPost, req.Method)
 			assert.Equal(t, "https://connect.mailerlite.com/api/emails/123/versions", req.URL.String())
+			b, err := io.ReadAll(req.Body)
+			assert.NoError(t, err)
+			assert.Len(t, b, 0)
 			return &http.Response{
 				StatusCode: status,
 				Body:       io.NopCloser(bytes.NewBufferString(`{"data":{"id":"5","created_at":"2026-10-28 12:00:00","current":true}}`)),

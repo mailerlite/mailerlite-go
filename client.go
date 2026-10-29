@@ -161,6 +161,8 @@ func (c *Client) SetAPIKey(apikey string) {
 	c.apiKey = apikey
 }
 
+// newRequest - make a request for path. For POST, PUT, PATCH and DELETE, send body as JSON. If body is nil,
+// or a nil pointer, map or slice, send no body. For GET, add body to the URL as query parameters.
 func (c *Client) newRequest(method, path string, body interface{}) (*http.Request, error) {
 	reqURL := fmt.Sprintf("%s%s", c.apiBase, path)
 	reqBodyBytes := new(bytes.Buffer)
@@ -169,9 +171,11 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 		method == http.MethodPut ||
 		method == http.MethodPatch ||
 		method == http.MethodDelete {
-		err := json.NewEncoder(reqBodyBytes).Encode(body)
-		if err != nil {
-			return nil, err
+		if !isNilBody(body) {
+			err := json.NewEncoder(reqBodyBytes).Encode(body)
+			if err != nil {
+				return nil, err
+			}
 		}
 	} else if method == http.MethodGet {
 		reqURL, _ = addOptions(reqURL, body)
@@ -307,6 +311,21 @@ func checkResponse(r *http.Response) error {
 		}
 	default:
 		return errorResponse
+	}
+}
+
+// isNilBody - true if body is nil, or a nil pointer, map or slice. JSON encodes these values as null.
+func isNilBody(body interface{}) bool {
+	if body == nil {
+		return true
+	}
+
+	v := reflect.ValueOf(body)
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Slice:
+		return v.IsNil()
+	default:
+		return false
 	}
 }
 
