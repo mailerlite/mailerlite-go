@@ -309,21 +309,22 @@ func addOptions(s string, opt interface{}) (string, error) {
 
 	for k, v := range newValues {
 		if k == "Filters" {
-			for _, fv := range v {
-				if fv == "" {
-					continue
-				}
-				split := strings.Fields(strings.Trim(fv, "{}"))
-				filterKey := fmt.Sprintf("filter[%s]", split[0])
-				origValues.Add(filterKey, split[1])
-			}
 			continue
-		} else {
-			for _, fv := range v {
-				if fv == "" {
-					continue
+		}
+		for _, fv := range v {
+			if fv == "" {
+				continue
+			}
+			origValues.Add(k, fv)
+		}
+	}
+
+	if s := reflect.Indirect(v); s.Kind() == reflect.Struct {
+		if f := s.FieldByName("Filters"); f.IsValid() {
+			if filters, ok := f.Interface().(*[]Filter); ok && filters != nil {
+				for _, filter := range *filters {
+					origValues.Add(fmt.Sprintf("filter[%s]", filter.Name), fmt.Sprint(filter.Value))
 				}
-				origValues.Add(k, fv)
 			}
 		}
 	}
