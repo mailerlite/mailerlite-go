@@ -199,6 +199,7 @@ type CreateEmailBlockOptions struct {
 }
 
 // EmailBlockPosition - where to put a block. BlockID is required for the positions "before" and "after".
+// For "start" and "end", the SDK does not check BlockID and does not send it.
 type EmailBlockPosition struct {
 	Position string `json:"position"`
 	BlockID  string `json:"block_id,omitempty"`
@@ -377,6 +378,11 @@ func (s *emailService) CreateBlock(ctx context.Context, emailID string, block *C
 		return nil, nil, err
 	}
 
+	block, err = blockToSend(block)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	req, err := s.client.newRequest(http.MethodPost, path, block)
 	if err != nil {
 		return nil, nil, err
@@ -427,7 +433,14 @@ func (s *emailService) MoveBlock(ctx context.Context, emailID string, blockID st
 		return nil, nil, err
 	}
 
-	req, err := s.client.newRequest(http.MethodPost, path, move)
+	placement, err := positionToSend(move.Placement)
+	if err != nil {
+		return nil, nil, err
+	}
+	sent := *move
+	sent.Placement = placement
+
+	req, err := s.client.newRequest(http.MethodPost, path, &sent)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -469,6 +482,11 @@ func (s *emailService) DeleteBlock(ctx context.Context, emailID string, blockID 
 // ValidateBlock - check a block against the rules of EmailService.CreateBlock. The API does not save the block.
 func (s *emailService) ValidateBlock(ctx context.Context, block *CreateEmailBlockOptions) (*EmailValidation, *Response, error) {
 	path, err := emailPath("/blocks/validate")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	block, err = blockToSend(block)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -627,16 +645,61 @@ func (s *emailService) RestoreVersion(ctx context.Context, emailID string, versi
 func emailPath(format string, ids ...string) (string, error) {
 	args := make([]interface{}, len(ids))
 	for i, id := range ids {
-		if id == "" {
-			return "", ErrEmptyID
-		}
-		for _, r := range id {
-			if r < '0' || r > '9' {
-				return "", ErrInvalidID
-			}
+		if err := checkEmailID(id); err != nil {
+			return "", err
 		}
 		args[i] = id
 	}
 
 	return emailEndpoint + fmt.Sprintf(format, args...), nil
+}
+
+// checkEmailID - return ErrEmptyID if id is empty, and ErrInvalidID if id contains a character that is not a digit
+func checkEmailID(id string) error {
+	if id == "" {
+		return ErrEmptyID
+	}
+	for _, r := range id {
+		if r < '0' || r > '9' {
+			return ErrInvalidID
+		}
+	}
+
+	return nil
+}
+
+// blockToSend - return block, or a copy of block with the placement from positionToSend. block does not change.
+func blockToSend(block *CreateEmailBlockOptions) (*CreateEmailBlockOptions, error) {
+	if block == nil || block.Placement == nil {
+		return block, nil
+	}
+
+	placement, err := positionToSend(*block.Placement)
+	if err != nil {
+		return nil, err
+	}
+	sent := *block
+	sent.Placement = &placement
+
+	return &sent, nil
+}
+
+// positionToSend - check the BlockID of position and return the position to send.
+// The API uses BlockID only for "before" and "after", and discards it without a check for "start" and "end".
+// For these two positions, the SDK does not check BlockID and removes it.
+// For other positions, the SDK checks BlockID if it is set, and sends it.
+func positionToSend(position EmailBlockPosition) (EmailBlockPosition, error) {
+	switch position.Position {
+	case EmailBlockPositionStart, EmailBlockPositionEnd:
+		position.BlockID = ""
+		return position, nil
+	case EmailBlockPositionBefore, EmailBlockPositionAfter:
+		return position, checkEmailID(position.BlockID)
+	}
+
+	if position.BlockID != "" {
+		return position, checkEmailID(position.BlockID)
+	}
+
+	return position, nil
 }

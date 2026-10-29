@@ -1635,6 +1635,8 @@ Every write must send the `etag` that the last read or write of the email return
 
 If an email, block or version ID is empty, the SDK returns `mailerlite.ErrEmptyID` and sends no request. If an ID contains a character that is not a digit, the SDK returns `mailerlite.ErrInvalidID` and sends no request.
 
+The SDK also checks the `BlockID` of a placement when the position is `before` or `after`. For `start` and `end`, the API does not use `BlockID`. The SDK does not check it and does not send it. Your value does not change.
+
 ### Create a campaign with the simple editor
 
 ```go
@@ -1862,7 +1864,7 @@ func main() {
 
 ### Move a block
 
-The position is `start`, `end`, `before` or `after`. `BlockID` is required for `before` and `after`, and must be a sibling of the block.
+The position is `start`, `end`, `before` or `after`. `BlockID` is required for `before` and `after`, and must be a sibling of the block. For `start` and `end`, the SDK does not send `BlockID`.
 
 ```go
 package main
