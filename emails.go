@@ -18,9 +18,6 @@ var (
 
 	// ErrInvalidID - an email, block or version ID contains a character that is not a digit. The SDK sends no request.
 	ErrInvalidID = errors.New("mailerlite: the ID must contain only digits")
-
-	// ErrEmptyEtag - a write has no etag. The SDK sends no request.
-	ErrEmptyEtag = errors.New("mailerlite: the etag must not be empty")
 )
 
 // EmailService defines an interface for operations on emails built with the simple editor.
@@ -200,8 +197,7 @@ type CreateEmailBlockOptions struct {
 	Etag          string                 `json:"etag,omitempty"`
 }
 
-// EmailBlockPosition - where to put a block. BlockID is required for the positions "before" and "after".
-// For "start" and "end", the SDK does not check BlockID and does not send it.
+// EmailBlockPosition - where to put a block. The API uses BlockID for the positions "before" and "after".
 type EmailBlockPosition struct {
 	Position string `json:"position"`
 	BlockID  string `json:"block_id,omitempty"`
@@ -370,16 +366,7 @@ func (s *emailService) GetBlock(ctx context.Context, emailID string, blockID str
 
 // CreateBlock - insert a new block into an email. Without a placement, the block goes at the end.
 func (s *emailService) CreateBlock(ctx context.Context, emailID string, block *CreateEmailBlockOptions) (*RootEmailBlock, *Response, error) {
-	if block == nil || block.Etag == "" {
-		return nil, nil, ErrEmptyEtag
-	}
-
 	path, err := emailPath("/%s/blocks", emailID)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	block, err = blockToSend(block)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -400,10 +387,6 @@ func (s *emailService) CreateBlock(ctx context.Context, emailID string, block *C
 
 // UpdateBlock - replace the content of a block. The block type and position do not change.
 func (s *emailService) UpdateBlock(ctx context.Context, emailID string, blockID string, block *UpdateEmailBlockOptions) (*RootEmailBlock, *Response, error) {
-	if block == nil || block.Etag == "" {
-		return nil, nil, ErrEmptyEtag
-	}
-
 	path, err := emailPath("/%s/blocks/%s", emailID, blockID)
 	if err != nil {
 		return nil, nil, err
@@ -425,23 +408,12 @@ func (s *emailService) UpdateBlock(ctx context.Context, emailID string, blockID 
 
 // MoveBlock - move a block among its siblings. The nesting of the block does not change.
 func (s *emailService) MoveBlock(ctx context.Context, emailID string, blockID string, move *MoveEmailBlockOptions) (*RootEmailBlock, *Response, error) {
-	if move == nil || move.Etag == "" {
-		return nil, nil, ErrEmptyEtag
-	}
-
 	path, err := emailPath("/%s/blocks/%s/move", emailID, blockID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	placement, err := positionToSend(move.Placement)
-	if err != nil {
-		return nil, nil, err
-	}
-	sent := *move
-	sent.Placement = placement
-
-	req, err := s.client.newRequest(http.MethodPost, path, &sent)
+	req, err := s.client.newRequest(http.MethodPost, path, move)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -457,10 +429,6 @@ func (s *emailService) MoveBlock(ctx context.Context, emailID string, blockID st
 
 // DeleteBlock - delete a block and the blocks nested in it
 func (s *emailService) DeleteBlock(ctx context.Context, emailID string, blockID string, etag string) (*RootEmailEtag, *Response, error) {
-	if etag == "" {
-		return nil, nil, ErrEmptyEtag
-	}
-
 	path, err := emailPath("/%s/blocks/%s", emailID, blockID)
 	if err != nil {
 		return nil, nil, err
@@ -487,11 +455,6 @@ func (s *emailService) ValidateBlock(ctx context.Context, block *CreateEmailBloc
 		return nil, nil, err
 	}
 
-	block, err = blockToSend(block)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	req, err := s.client.newRequest(http.MethodPost, path, block)
 	if err != nil {
 		return nil, nil, err
@@ -508,10 +471,6 @@ func (s *emailService) ValidateBlock(ctx context.Context, block *CreateEmailBloc
 
 // UpdateSettings - change the design settings of an email
 func (s *emailService) UpdateSettings(ctx context.Context, emailID string, settings *UpdateEmailSettingsOptions) (*RootEmailSettings, *Response, error) {
-	if settings == nil || settings.Etag == "" {
-		return nil, nil, ErrEmptyEtag
-	}
-
 	path, err := emailPath("/%s/settings", emailID)
 	if err != nil {
 		return nil, nil, err
@@ -618,10 +577,6 @@ func (s *emailService) ListVersions(ctx context.Context, emailID string, options
 
 // RestoreVersion - put an email back to a saved version. The API saves the replaced state as a version first.
 func (s *emailService) RestoreVersion(ctx context.Context, emailID string, versionID string, etag string) (*RootEmailDocument, *Response, error) {
-	if etag == "" {
-		return nil, nil, ErrEmptyEtag
-	}
-
 	path, err := emailPath("/%s/versions/%s/restore", emailID, versionID)
 	if err != nil {
 		return nil, nil, err
@@ -665,37 +620,4 @@ func checkEmailID(id string) error {
 	}
 
 	return nil
-}
-
-// The block of the caller does not change.
-func blockToSend(block *CreateEmailBlockOptions) (*CreateEmailBlockOptions, error) {
-	if block == nil || block.Placement == nil {
-		return block, nil
-	}
-
-	placement, err := positionToSend(*block.Placement)
-	if err != nil {
-		return nil, err
-	}
-	sent := *block
-	sent.Placement = &placement
-
-	return &sent, nil
-}
-
-// The API uses BlockID only for "before" and "after", and discards it without a check for "start" and "end".
-func positionToSend(position EmailBlockPosition) (EmailBlockPosition, error) {
-	switch position.Position {
-	case EmailBlockPositionStart, EmailBlockPositionEnd:
-		position.BlockID = ""
-		return position, nil
-	case EmailBlockPositionBefore, EmailBlockPositionAfter:
-		return position, checkEmailID(position.BlockID)
-	}
-
-	if position.BlockID != "" {
-		return position, checkEmailID(position.BlockID)
-	}
-
-	return position, nil
 }

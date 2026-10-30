@@ -466,50 +466,72 @@ func TestCanListEmailVersionsWithoutOptions(t *testing.T) {
 	assert.Empty(t, root.Data)
 }
 
-func TestEmailWritesRejectEmptyEtag(t *testing.T) {
+func TestEmailWritesSendEmptyEtag(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
+	var bodies []string
 	testClient := NewTestClient(func(req *http.Request) *http.Response {
-		t.Errorf("unexpected request: %v %v", req.Method, req.URL)
-		return nil
+		body := ""
+		if req.Body != nil {
+			b, _ := io.ReadAll(req.Body)
+			body = strings.TrimRight(string(b), "\r\n")
+		}
+		bodies = append(bodies, body)
+		return &http.Response{
+			StatusCode: http.StatusUnprocessableEntity,
+			Request:    req,
+			Body:       io.NopCloser(strings.NewReader(`{"message":"The etag field is required.","errors":{"etag":["The etag field is required."]}}`)),
+		}
 	})
 
 	client.SetHttpClient(testClient)
 
 	ctx := context.TODO()
-	writes := map[string]func() error{
-		"CreateBlock": func() error {
-			_, _, err := client.Email.CreateBlock(ctx, "123", &mailerlite.CreateEmailBlockOptions{Type: mailerlite.EmailBlockTypeDivider})
-			return err
-		},
-		"CreateBlock nil": func() error {
-			_, _, err := client.Email.CreateBlock(ctx, "123", nil)
-			return err
-		},
-		"UpdateBlock": func() error {
-			_, _, err := client.Email.UpdateBlock(ctx, "123", "57", &mailerlite.UpdateEmailBlockOptions{})
-			return err
-		},
-		"MoveBlock": func() error {
-			_, _, err := client.Email.MoveBlock(ctx, "123", "57", &mailerlite.MoveEmailBlockOptions{})
-			return err
-		},
-		"DeleteBlock": func() error {
-			_, _, err := client.Email.DeleteBlock(ctx, "123", "57", "")
-			return err
-		},
-		"UpdateSettings": func() error {
-			_, _, err := client.Email.UpdateSettings(ctx, "123", &mailerlite.UpdateEmailSettingsOptions{})
-			return err
-		},
-		"RestoreVersion": func() error {
-			_, _, err := client.Email.RestoreVersion(ctx, "123", "4", "")
-			return err
-		},
+	writes := map[string]struct {
+		write func() (*mailerlite.Response, error)
+		body  string
+	}{
+		"CreateBlock": {func() (*mailerlite.Response, error) {
+			_, res, err := client.Email.CreateBlock(ctx, "123", &mailerlite.CreateEmailBlockOptions{Type: mailerlite.EmailBlockTypeDivider, EditorContent: map[string]interface{}{}})
+			return res, err
+		}, `{"type":"divider","editor_content":{}}`},
+		"CreateBlock nil": {func() (*mailerlite.Response, error) {
+			_, res, err := client.Email.CreateBlock(ctx, "123", nil)
+			return res, err
+		}, ""},
+		"UpdateBlock": {func() (*mailerlite.Response, error) {
+			_, res, err := client.Email.UpdateBlock(ctx, "123", "57", &mailerlite.UpdateEmailBlockOptions{EditorContent: map[string]interface{}{}})
+			return res, err
+		}, `{"editor_content":{}}`},
+		"MoveBlock": {func() (*mailerlite.Response, error) {
+			_, res, err := client.Email.MoveBlock(ctx, "123", "57", &mailerlite.MoveEmailBlockOptions{Placement: mailerlite.EmailBlockPosition{Position: mailerlite.EmailBlockPositionEnd}})
+			return res, err
+		}, `{"placement":{"position":"end"}}`},
+		"DeleteBlock": {func() (*mailerlite.Response, error) {
+			_, res, err := client.Email.DeleteBlock(ctx, "123", "57", "")
+			return res, err
+		}, `{"etag":""}`},
+		"UpdateSettings": {func() (*mailerlite.Response, error) {
+			_, res, err := client.Email.UpdateSettings(ctx, "123", &mailerlite.UpdateEmailSettingsOptions{})
+			return res, err
+		}, `{}`},
+		"RestoreVersion": {func() (*mailerlite.Response, error) {
+			_, res, err := client.Email.RestoreVersion(ctx, "123", "4", "")
+			return res, err
+		}, `{"etag":""}`},
 	}
 
-	for name, write := range writes {
-		assert.ErrorIs(t, write(), mailerlite.ErrEmptyEtag, name)
+	for name, w := range writes {
+		bodies = nil
+		res, err := w.write()
+
+		require.Len(t, bodies, 1, name)
+		assert.Equal(t, w.body, bodies[0], name)
+		require.NotNil(t, res, name)
+		assert.Equal(t, http.StatusUnprocessableEntity, res.StatusCode, name)
+		var errResp *mailerlite.ErrorResponse
+		require.ErrorAs(t, err, &errResp, name)
+		assert.Contains(t, errResp.Errors, "etag", name)
 	}
 }
 
@@ -575,7 +597,7 @@ func TestEmailMethodsRejectNonNumericID(t *testing.T) {
 	}
 }
 
-func TestEmailBlockPositionChecksBlockIDOnlyForBeforeAndAfter(t *testing.T) {
+func TestEmailBlockPositionIsSentAsGiven(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
 	var bodies []string
@@ -613,23 +635,20 @@ func TestEmailBlockPositionChecksBlockIDOnlyForBeforeAndAfter(t *testing.T) {
 	cases := []struct {
 		position  string
 		blockID   string
-		err       error
 		placement string
 	}{
-		{"start", "", nil, `{"position":"start"}`},
-		{"start", "1/2", nil, `{"position":"start"}`},
-		{"start", "56", nil, `{"position":"start"}`},
-		{"end", "", nil, `{"position":"end"}`},
-		{"end", "x", nil, `{"position":"end"}`},
-		{"before", "56", nil, `{"position":"before","block_id":"56"}`},
-		{"after", "56", nil, `{"position":"after","block_id":"56"}`},
-		{"before", "", mailerlite.ErrEmptyID, ""},
-		{"after", "", mailerlite.ErrEmptyID, ""},
-		{"before", "1/2", mailerlite.ErrInvalidID, ""},
-		{"after", "56\n", mailerlite.ErrInvalidID, ""},
-		{"middle", "", nil, `{"position":"middle"}`},
-		{"middle", "56", nil, `{"position":"middle","block_id":"56"}`},
-		{"middle", "1/2", mailerlite.ErrInvalidID, ""},
+		{"start", "", `{"position":"start"}`},
+		{"start", "56", `{"position":"start","block_id":"56"}`},
+		{"start", "1/2", `{"position":"start","block_id":"1/2"}`},
+		{"end", "x", `{"position":"end","block_id":"x"}`},
+		{"before", "56", `{"position":"before","block_id":"56"}`},
+		{"after", "56", `{"position":"after","block_id":"56"}`},
+		{"before", "", `{"position":"before"}`},
+		{"after", "", `{"position":"after"}`},
+		{"before", "1/2", `{"position":"before","block_id":"1/2"}`},
+		{"after", "56\n", `{"position":"after","block_id":"56\n"}`},
+		{"middle", "", `{"position":"middle"}`},
+		{"middle", "1/2", `{"position":"middle","block_id":"1/2"}`},
 	}
 
 	for name, send := range sends {
@@ -638,45 +657,12 @@ func TestEmailBlockPositionChecksBlockIDOnlyForBeforeAndAfter(t *testing.T) {
 			p := mailerlite.EmailBlockPosition{Position: c.position, BlockID: c.blockID}
 			body, err := send(p)
 			label := name + " " + c.position + " " + c.blockID
-			if c.err != nil {
-				assert.ErrorIs(t, err, c.err, label)
-				assert.Empty(t, bodies, label)
+			if !assert.NoError(t, err, label) || !assert.Len(t, bodies, 1, label) {
 				continue
 			}
-			require.NoError(t, err, label)
-			require.Len(t, bodies, 1, label)
 			assert.Equal(t, strings.Replace(body, "%s", c.placement, 1), bodies[0], label)
 		}
 	}
-}
-
-func TestEmailBlockPositionDoesNotChangeTheCallerValue(t *testing.T) {
-	client := mailerlite.NewClient(testKey)
-
-	testClient := NewTestClient(func(req *http.Request) *http.Response {
-		return &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(testEmailBlock)),
-		}
-	})
-
-	client.SetHttpClient(testClient)
-
-	ctx := context.TODO()
-	placement := &mailerlite.EmailBlockPosition{Position: mailerlite.EmailBlockPositionEnd, BlockID: "56"}
-	block := &mailerlite.CreateEmailBlockOptions{Type: mailerlite.EmailBlockTypeDivider, EditorContent: map[string]interface{}{}, Placement: placement, Etag: "42"}
-	move := &mailerlite.MoveEmailBlockOptions{Placement: *placement, Etag: "42"}
-
-	_, _, err := client.Email.CreateBlock(ctx, "123", block)
-	require.NoError(t, err)
-	_, _, err = client.Email.ValidateBlock(ctx, block)
-	require.NoError(t, err)
-	_, _, err = client.Email.MoveBlock(ctx, "123", "57", move)
-	require.NoError(t, err)
-
-	assert.Same(t, placement, block.Placement)
-	assert.Equal(t, "56", placement.BlockID)
-	assert.Equal(t, "56", move.Placement.BlockID)
 }
 
 func TestEmailWriteReturnsVersionConflict(t *testing.T) {

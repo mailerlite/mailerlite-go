@@ -3,8 +3,10 @@ package mailerlite_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 	"testing"
@@ -573,16 +575,12 @@ func TestIdempotentReplayIgnoresCaseAndSpaces(t *testing.T) {
 	}
 }
 
-func TestRejectsInvalidIdempotencyKey(t *testing.T) {
+func TestSendsIdempotencyKeyAsGiven(t *testing.T) {
 	keys := map[string]string{
-		"empty":          "",
-		"too long":       strings.Repeat("a", 256),
-		"new line":       "key\nX-Injected: 1",
-		"tab":            "key\tvalue",
-		"not ASCII":      "clé",
-		"delete (0x7f)":  "key\x7f",
 		"leading space":  " key",
 		"trailing space": "key ",
+		"too long":       strings.Repeat("a", 256),
+		"not ASCII":      "clé",
 	}
 
 	for name, key := range keys {
@@ -592,27 +590,52 @@ func TestRejectsInvalidIdempotencyKey(t *testing.T) {
 			requests := 0
 			client.SetHttpClient(NewTestClient(func(req *http.Request) *http.Response {
 				requests++
-				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(`{}`))}
+				assert.Equal(t, []string{key}, req.Header.Values(mailerlite.HeaderIdempotencyKey))
+				return &http.Response{StatusCode: http.StatusCreated, Body: io.NopCloser(strings.NewReader(`{"data":{"id":"5"}}`))}
 			}))
 
 			ctx := mailerlite.WithIdempotencyKey(context.TODO(), key)
 			_, _, err := client.Email.CreateVersion(ctx, "123")
 
-			assert.ErrorIs(t, err, mailerlite.ErrInvalidIdempotencyKey)
-			assert.Equal(t, 0, requests)
+			require.NoError(t, err)
+			assert.Equal(t, 1, requests)
 		})
 	}
 }
 
-func TestAcceptsLongestIdempotencyKey(t *testing.T) {
+func TestDoesNotSendEmptyIdempotencyKey(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
-	key := strings.Repeat("~", 255)
+	requests := 0
 	client.SetHttpClient(NewTestClient(func(req *http.Request) *http.Response {
-		assert.Equal(t, key, req.Header.Get(mailerlite.HeaderIdempotencyKey))
+		requests++
+		_, ok := req.Header[mailerlite.HeaderIdempotencyKey]
+		assert.False(t, ok)
 		return &http.Response{StatusCode: http.StatusCreated, Body: io.NopCloser(strings.NewReader(`{"data":{"id":"5"}}`))}
 	}))
 
-	_, _, err := client.Email.CreateVersion(mailerlite.WithIdempotencyKey(context.TODO(), key), "123")
+	_, _, err := client.Email.CreateVersion(mailerlite.WithIdempotencyKey(context.TODO(), ""), "123")
+
 	require.NoError(t, err)
+	assert.Equal(t, 1, requests)
+}
+
+// net/http rejects a header value with a control character before it connects.
+func TestReturnsHTTPErrorForIdempotencyKeyWithNewLine(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	dials := 0
+	client.SetHttpClient(&http.Client{Transport: &http.Transport{
+		DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+			dials++
+			return nil, errors.New("test: no network")
+		},
+	}})
+
+	ctx := mailerlite.WithIdempotencyKey(context.TODO(), "key\nX-Injected: 1")
+	_, _, err := client.Email.CreateVersion(ctx, "123")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid header field value")
+	assert.Equal(t, 0, dials)
 }

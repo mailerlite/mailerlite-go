@@ -200,9 +200,7 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*Response, error) {
 	req = req.WithContext(ctx)
 
-	if err := setIdempotencyKey(req); err != nil {
-		return nil, err
-	}
+	setIdempotencyKey(req)
 
 	// If we've hit rate limit, don't make further requests before Reset time.
 	if err := c.checkRateLimitBeforeDo(req); err != nil {

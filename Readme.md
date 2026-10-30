@@ -1631,11 +1631,11 @@ These endpoints work on emails built with the simple editor. Get the email ID fr
 
 To get a simple editor email, create a campaign with `Editor: mailerlite.EmailEditorSimple`. You can set `Editor` only when you create the campaign. Do not set `Content`. If the email does not use the simple editor, the API returns a `422` error.
 
-Every write must send the `etag` that the last read or write of the email returned. If the etag is empty, the SDK returns `mailerlite.ErrEmptyEtag` and sends no request. If the email changed after that read or write, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. The `Etag` field of the `*mailerlite.ErrorResponse` contains the current etag of the email.
+Every write must send the `etag` that the last read or write of the email returned. If the etag is empty, the API returns a `422` error. If the email changed after that read or write, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. The `Etag` field of the `*mailerlite.ErrorResponse` contains the current etag of the email.
 
 If an email, block or version ID is empty, the SDK returns `mailerlite.ErrEmptyID` and sends no request. If an ID contains a character that is not a digit, the SDK returns `mailerlite.ErrInvalidID` and sends no request.
 
-The SDK also checks the `BlockID` of a placement when the position is `before` or `after`. For `start` and `end`, the API does not use `BlockID`. The SDK does not check it and does not send it. Your value does not change.
+The SDK does not check the other values, for example the placement. It sends them as you give them. The API checks them and returns an error. The validate methods return `Valid: false` with the errors.
 
 ### Create a campaign with the simple editor
 
@@ -1864,7 +1864,7 @@ func main() {
 
 ### Move a block
 
-The position is `start`, `end`, `before` or `after`. `BlockID` is required for `before` and `after`, and must be a sibling of the block. For `start` and `end`, the SDK does not send `BlockID`.
+The position is `start`, `end`, `before` or `after`. `BlockID` is required for `before` and `after`, and must be a sibling of the block.
 
 ```go
 package main
@@ -2175,7 +2175,10 @@ func main() {
 If a write fails with a network error, you do not know if the API did the write. Send the write with an idempotency key, and retry it with the same key and the same request. If the first request succeeded, the API returns the stored response again and does not do the write two times.
 
 - Use a new key for each write. The API keeps a key for 24 hours.
-- The key must be 1 to 255 printable ASCII characters, and must not start or end with a space. Otherwise the SDK returns `mailerlite.ErrInvalidIdempotencyKey` and sends no request.
+- If the key is empty, the SDK sends no `Idempotency-Key` header.
+- The SDK does not check the format of the key. The API returns a `400` error for an invalid key.
+- `net/http` returns an error for a key with a control character, for example a new line. It then sends no request.
+- For HTTP/1.1, `net/http` removes spaces at the start and the end of the key.
 - The same key with a different request returns a `422` error. If the first request is still running, the API returns a `409` error without a code.
 - The API uses the key only for the POST, PATCH and DELETE requests of `client.Email`, except the validate methods.
 
