@@ -32,10 +32,11 @@ type RootFields struct {
 }
 
 type Field struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-	Key  string `json:"key"`
-	Type string `json:"type"`
+	Id        string `json:"id"`
+	Name      string `json:"name"`
+	Key       string `json:"key"`
+	Type      string `json:"type"`
+	IsDefault bool   `json:"is_default"`
 }
 
 // ListFieldOptions - modifies the behavior of FieldService.List method
