@@ -1,6 +1,8 @@
 package mailerlite
 
 import (
+	"bytes"
+	"encoding/json"
 	"net/url"
 	"strconv"
 )
@@ -141,6 +143,21 @@ type SoftBounceRate struct {
 	String string  `json:"string"`
 }
 
+type DeliveredRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
+type ForwardRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
+type SocialInteractionRate struct {
+	Float  float64 `json:"float"`
+	String string  `json:"string"`
+}
+
 type ClickToOpenRate struct {
 	Float  float64 `json:"float"`
 	String string  `json:"string"`
@@ -185,6 +202,18 @@ func (l *Links) IsLastPage() bool {
 
 func (l *Links) isLast() bool {
 	return l.Next == ""
+}
+
+func decodeWithRaw(b []byte, v interface{}, raw *map[string]interface{}) error {
+	if err := json.Unmarshal(b, v); err != nil {
+		return err
+	}
+
+	return json.Unmarshal(b, raw)
+}
+
+func isEmptyJSONArray(b []byte) bool {
+	return bytes.Equal(bytes.TrimSpace(b), []byte("[]"))
 }
 
 func pageForURL(urlText string) (int, error) {
