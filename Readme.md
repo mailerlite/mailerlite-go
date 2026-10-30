@@ -69,6 +69,27 @@ MailerLite Golang SDK
         - [Get a list of timezones](#get-a-list-of-timezones)
     - [Campaign languages](#languages)
         - [Get a list of languages](#get-a-list-of-languages)
+    - [Emails](#emails)
+        - [Create a campaign with the simple editor](#create-a-campaign-with-the-simple-editor)
+        - [Get an email](#get-an-email)
+        - [Get the HTML of an email](#get-the-html-of-an-email)
+        - [Get a block of an email](#get-a-block-of-an-email)
+        - [Insert a block into an email](#insert-a-block-into-an-email)
+        - [Update the content of a block](#update-the-content-of-a-block)
+        - [Move a block](#move-a-block)
+        - [Delete a block](#delete-a-block)
+        - [Validate a block](#validate-a-block)
+        - [Update the design settings of an email](#update-the-design-settings-of-an-email)
+        - [Validate the design settings of an email](#validate-the-design-settings-of-an-email)
+        - [Save an email as a template](#save-an-email-as-a-template)
+        - [Get a list of versions of an email](#get-a-list-of-versions-of-an-email)
+        - [Save a version of an email](#save-a-version-of-an-email)
+        - [Restore a version of an email](#restore-a-version-of-an-email)
+        - [Retry a write with an idempotency key](#retry-a-write-with-an-idempotency-key)
+    - [Brand styles](#brand-styles)
+        - [Get the brand styles](#get-the-brand-styles)
+    - [Files](#files)
+        - [Get a list of files](#get-a-list-of-files)
 
 # Installation
 We recommend using this package with golang [modules](https://github.com/golang/go/wiki/Modules)
@@ -1600,6 +1621,681 @@ func main() {
 	_, _, err := client.Campaign.Languages(ctx)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+```
+
+## Emails
+
+These endpoints work on emails built with the simple editor. Get the email ID from a campaign's `emails` array.
+
+To get a simple editor email, create a campaign with `Editor: mailerlite.EmailEditorSimple`. You can set `Editor` only when you create the campaign. Do not set `Content`. If the email does not use the simple editor, the API returns a `422` error.
+
+Every write must send the `etag` that the last read or write of the email returned. If the etag is empty, the API returns a `422` error. If the email changed after that read or write, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. The `Etag` field of the `*mailerlite.ErrorResponse` contains the current etag of the email.
+
+If an email, block or version ID is empty, the SDK returns `mailerlite.ErrEmptyID` and sends no request. If an ID contains a character that is not a digit, the SDK returns `mailerlite.ErrInvalidID` and sends no request.
+
+The SDK does not check the other values, for example the placement. It sends them as you give them. The API checks them and returns an error. The validate methods return `Valid: false` with the errors.
+
+### Create a campaign with the simple editor
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	campaign := &mailerlite.CreateCampaign{
+		Name: "Campaign Name",
+		Type: mailerlite.CampaignTypeRegular,
+		Emails: []mailerlite.Emails{
+			{
+				Subject:  "Subject",
+				FromName: "Your Name",
+				From:     "your@domain.com",
+				Editor:   mailerlite.EmailEditorSimple,
+			},
+		},
+	}
+
+	root, _, err := client.Campaign.Create(ctx, campaign)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	email, _, err := client.Email.Get(ctx, root.Data.Emails[0].ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(email.Etag)
+}
+```
+
+### Get an email
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	email, _, err := client.Email.Get(ctx, "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(email.Etag)
+}
+```
+
+### Get the HTML of an email
+
+The HTML is a preview. Do not send it yourself, because it contains personalization tokens and no tracking URLs.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	html, _, err := client.Email.GetHTML(ctx, "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(html.Data.HTML)
+}
+```
+
+### Get a block of an email
+
+`Placement` gives the IDs of the blocks before and after the block.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	block, _, err := client.Email.GetBlock(ctx, "email-id", "block-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(block.Data.Type)
+}
+```
+
+### Insert a block into an email
+
+Without `Placement`, the block goes at the end of the email. `EditorContent` is required. Use an empty map for a block with no content, such as a divider.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	email, _, err := client.Email.Get(ctx, "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type: mailerlite.EmailBlockTypeParagraph,
+		EditorContent: map[string]interface{}{
+			"content": []interface{}{
+				map[string]interface{}{"type": "text", "text": "Hello"},
+			},
+		},
+		Placement: &mailerlite.EmailBlockPosition{
+			Position: mailerlite.EmailBlockPositionAfter,
+			BlockID:  "block-id",
+		},
+		Etag: email.Etag,
+	}
+
+	created, _, err := client.Email.CreateBlock(ctx, "email-id", block)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Use created.Etag for the next write to this email.
+	log.Print(created.Data.ID)
+}
+```
+
+### Update the content of a block
+
+`EditorContent` replaces the whole content of the block. Get the block first, change it, and send all of it back.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	block, _, err := client.Email.GetBlock(ctx, "email-id", "block-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	content := block.Data.EditorContent
+	content["attrs"] = map[string]interface{}{"textAlign": "center"}
+
+	updated, _, err := client.Email.UpdateBlock(ctx, "email-id", "block-id", &mailerlite.UpdateEmailBlockOptions{
+		EditorContent: content,
+		Etag:          block.Etag,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(updated.Etag)
+}
+```
+
+### Move a block
+
+The position is `start`, `end`, `before` or `after`. `BlockID` is required for `before` and `after`, and must be a sibling of the block.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	moved, _, err := client.Email.MoveBlock(ctx, "email-id", "block-id", &mailerlite.MoveEmailBlockOptions{
+		Placement: mailerlite.EmailBlockPosition{
+			Position: mailerlite.EmailBlockPositionBefore,
+			BlockID:  "other-block-id",
+		},
+		Etag: "etag-from-the-last-read-or-write",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(moved.Etag)
+}
+```
+
+### Delete a block
+
+The blocks nested in the block are deleted too. The response has only the new etag of the email.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	deleted, _, err := client.Email.DeleteBlock(ctx, "email-id", "block-id", "etag-from-the-last-read-or-write")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(deleted.Etag)
+}
+```
+
+### Validate a block
+
+This checks a block against the same rules as an insert, and saves nothing. Invalid content is a successful request, so check `Valid` and `Errors`.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	result, _, err := client.Email.ValidateBlock(ctx, &mailerlite.CreateEmailBlockOptions{
+		Type: mailerlite.EmailBlockTypeParagraph,
+		EditorContent: map[string]interface{}{
+			"attrs": map[string]interface{}{"textAlign": "center"},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !result.Valid {
+		log.Print(result.Errors)
+	}
+}
+```
+
+### Update the design settings of an email
+
+Set only the keys to change. The API stores every value that you send on the email, also a value that is the same as the account value.
+
+- To unset a brand colour, send an empty string. The API stores the value empty, and the email then uses the account value.
+- To unset a footer text, send an empty editor document: an empty `EditorContent` map, or a map with an empty `content` list.
+- Other colours, sizes, `Button.BorderRadius` and `Brand.Style` cannot be empty. An empty string gives a `422` error.
+
+If the API removes an unsafe value, the response has `Rejected` with the keys of the removed values.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	updated, _, err := client.Email.UpdateSettings(ctx, "email-id", &mailerlite.UpdateEmailSettingsOptions{
+		EmailSettings: mailerlite.EmailSettings{
+			Brand: &mailerlite.EmailBrandSettings{
+				Mode:            mailerlite.String(mailerlite.EmailBrandModeCustom),
+				BackgroundColor: mailerlite.String("#f4f4f4"),
+			},
+		},
+		Etag: "etag-from-the-last-read-or-write",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if updated.Rejected != nil {
+		log.Print(updated.Rejected.Keys)
+	}
+}
+```
+
+### Validate the design settings of an email
+
+This checks a settings change against the same rules as an update, and saves nothing. No etag is necessary.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	result, _, err := client.Email.ValidateSettings(ctx, "email-id", &mailerlite.UpdateEmailSettingsOptions{
+		EmailSettings: mailerlite.EmailSettings{
+			Button: &mailerlite.EmailButtonSettings{BorderRadius: mailerlite.String("12")},
+		},
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if !result.Valid {
+		log.Print(result.Errors)
+	}
+}
+```
+
+### Save an email as a template
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	template, _, err := client.Email.CreateTemplate(ctx, "email-id", &mailerlite.CreateEmailTemplateOptions{
+		Name: "Newsletter",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(template.Data.ID)
+}
+```
+
+### Get a list of versions of an email
+
+The list is newest first. `Current` marks the version that the email is on now.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	versions, _, err := client.Email.ListVersions(ctx, "email-id", &mailerlite.ListEmailVersionOptions{
+		Page:  1,
+		Limit: 10,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(len(versions.Data))
+}
+```
+
+### Save a version of an email
+
+Changes made through the API do not save a version. If nothing changed since the last version, the API returns that version with status `200` instead of `201`.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	version, _, err := client.Email.CreateVersion(ctx, "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(version.Data.ID)
+}
+```
+
+### Restore a version of an email
+
+The API saves the replaced state as a version first, so you can undo a restore. The response is the restored email.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	email, _, err := client.Email.RestoreVersion(ctx, "email-id", "version-id", "etag-from-the-last-read-or-write")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(email.Etag)
+}
+```
+
+### Retry a write with an idempotency key
+
+If a write fails with a network error, you do not know if the API did the write. Send the write with an idempotency key, and retry it with the same key and the same request. If the first request succeeded, the API returns the stored response again and does not do the write two times.
+
+- Use a new key for each write. The API keeps a key for 24 hours.
+- If the key is empty, the SDK sends no `Idempotency-Key` header.
+- The SDK does not check the format of the key. The API returns a `400` error for an invalid key.
+- `net/http` returns an error for a key with a control character, for example a new line. It then sends no request.
+- For HTTP/1.1, `net/http` removes spaces at the start and the end of the key.
+- The same key with a different request returns a `422` error. If the first request is still running, the API returns a `409` error without a code.
+- The API uses the key only for the POST, PATCH and DELETE requests of `client.Email`, except the validate methods.
+
+```go
+package main
+
+import (
+	"context"
+	"errors"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type:          mailerlite.EmailBlockTypeDivider,
+		EditorContent: map[string]interface{}{},
+		Etag:          "etag-from-the-last-read-or-write",
+	}
+
+	keyCtx := mailerlite.WithIdempotencyKey(ctx, "insert-divider-0001")
+
+	created, res, err := client.Email.CreateBlock(keyCtx, "email-id", block)
+	var errResp *mailerlite.ErrorResponse
+	if err != nil && !errors.As(err, &errResp) {
+		// Network error: retry with the same key and the same request.
+		created, res, err = client.Email.CreateBlock(keyCtx, "email-id", block)
+	}
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Print(created.Data.ID, res.IsIdempotentReplay())
+}
+```
+
+## Brand styles
+
+### Get the brand styles
+
+The response has the account palette (`Brand`, `nil` if the account has none), the default palette and the presets. To apply a preset to an email, send its `Identifier` as `Brand.Style` in `Email.UpdateSettings`.
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	styles, _, err := client.BrandStyle.Get(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, preset := range styles.Data.Presets {
+		log.Print(preset.Identifier)
+	}
+}
+```
+
+## Files
+
+### Get a list of files
+
+Use a file URL to put an image into an email block. You can filter by `name` (partial match) and `type` (`image`, `pdf` or `epub`).
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListFileOptions{
+		Filters: &[]mailerlite.Filter{{
+			Name:  "type",
+			Value: mailerlite.FileTypeImage,
+		}},
+		Sort:  mailerlite.SortByCreatedAtDescending,
+		Page:  1,
+		Limit: 10,
+	}
+
+	files, _, err := client.File.List(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, file := range files.Data {
+		log.Print(file.URL)
 	}
 }
 ```

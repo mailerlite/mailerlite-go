@@ -34,6 +34,8 @@ var (
 	SortByCreatedAtDescending          = "-created_at"
 	SortByUpdatedAt                    = "updated_at"
 	SortByUpdatedAtDescending          = "-updated_at"
+	SortBySize                         = "size"
+	SortBySizeDescending               = "-size"
 
 	FormTypePopup     = "popup"
 	FormTypeEmbedded  = "embedded"
@@ -46,6 +48,34 @@ var (
 	CampaignScheduleTypeInstant   = "instant"
 	CampaignScheduleTypeScheduled = "scheduled"
 	CampaignScheduleTypeTimezone  = "timezone_based"
+
+	EmailBlockTypeBlockquote   = "blockquote"
+	EmailBlockTypeBulletedList = "bulleted_list"
+	EmailBlockTypeButton       = "button"
+	EmailBlockTypeCode         = "code"
+	EmailBlockTypeDivider      = "divider"
+	EmailBlockTypeHeading      = "heading"
+	EmailBlockTypeImage        = "image"
+	EmailBlockTypeNumberedList = "numbered_list"
+	EmailBlockTypeParagraph    = "paragraph"
+	EmailBlockTypeSocialIcon   = "social_icon"
+	EmailBlockTypeTitle        = "title" // only reads return this type; you cannot insert a block of this type
+	EmailBlockTypeVideo        = "video"
+
+	EmailBlockPositionStart  = "start"
+	EmailBlockPositionEnd    = "end"
+	EmailBlockPositionBefore = "before"
+	EmailBlockPositionAfter  = "after"
+
+	EmailEditorSimple = "simple"
+
+	EmailBrandModeAccount  = "account"
+	EmailBrandModeTemplate = "template"
+	EmailBrandModeCustom   = "custom"
+
+	FileTypeImage = "image"
+	FileTypePDF   = "pdf"
+	FileTypeEpub  = "epub"
 )
 
 type Meta struct {
