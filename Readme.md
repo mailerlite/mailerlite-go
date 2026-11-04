@@ -29,6 +29,7 @@ MailerLite Golang SDK
     - [Segments](#segments)
         - [Get a list of segments](#get-a-list-of-segments)
         - [Update a segment](#update-a-segment)
+        - [Update a segment name and filter](#update-a-segment-name-and-filter)
         - [Delete a segment](#delete-a-segment)
         - [Get subscribers belonging to a segment](#get-subscribers-belonging-to-a-segment)
     - [Fields](#fields)
@@ -42,6 +43,47 @@ MailerLite Golang SDK
         - [Get subscribers activity for an automation](#get-subscribers-activity-for-an-automation)
         - [Create a draft automation](#create-a-draft-automation)
         - [Delete an automation](#delete-an-automation)
+        - [Update an automation](#update-an-automation)
+        - [Copy an automation](#copy-an-automation)
+        - [Enable an automation](#enable-an-automation)
+        - [Disable an automation](#disable-an-automation)
+        - [Send a test of an automation](#send-a-test-of-an-automation)
+        - [Add subscribers to an automation](#add-subscribers-to-an-automation)
+        - [Re-add subscribers to an automation](#re-add-subscribers-to-an-automation)
+        - [Copy automation activity subscribers to a group](#copy-automation-activity-subscribers-to-a-group)
+        - [Cancel active automation runs](#cancel-active-automation-runs)
+        - [Skip the delay of active automation runs](#skip-the-delay-of-active-automation-runs)
+        - [Get a list of automation triggers](#get-a-list-of-automation-triggers)
+        - [Create an automation trigger](#create-an-automation-trigger)
+        - [Get an automation trigger](#get-an-automation-trigger)
+        - [Update an automation trigger](#update-an-automation-trigger)
+        - [Delete an automation trigger](#delete-an-automation-trigger)
+        - [Get a list of automation steps](#get-a-list-of-automation-steps)
+        - [Create an automation step](#create-an-automation-step)
+        - [Get an automation step](#get-an-automation-step)
+        - [Update an automation step](#update-an-automation-step)
+        - [Delete an automation step](#delete-an-automation-step)
+        - [Copy an automation step](#copy-an-automation-step)
+        - [Reorder automation steps](#reorder-automation-steps)
+        - [Select an automation A/B test winner](#select-an-automation-ab-test-winner)
+        - [Get an automation email content](#get-an-automation-email-content)
+        - [Update an automation email content](#update-an-automation-email-content)
+        - [Get an automation email report stats](#get-an-automation-email-report-stats)
+        - [Get an automation email e-commerce stats](#get-an-automation-email-e-commerce-stats)
+        - [Get an automation email unsubscribe reasons](#get-an-automation-email-unsubscribe-reasons)
+        - [Get a list of automation templates](#get-a-list-of-automation-templates)
+        - [Create an automation from a template](#create-an-automation-from-a-template)
+        - [Get automation step run counts](#get-automation-step-run-counts)
+        - [Get an automation step run count](#get-an-automation-step-run-count)
+        - [Get automation trigger run counts](#get-automation-trigger-run-counts)
+        - [Get an automation trigger run count](#get-an-automation-trigger-run-count)
+        - [Get automation A/B test stats](#get-automation-ab-test-stats)
+        - [Get an automation A/B test step stats](#get-an-automation-ab-test-step-stats)
+        - [Get subscribers of an automation step](#get-subscribers-of-an-automation-step)
+        - [Get subscribers of an automation trigger](#get-subscribers-of-an-automation-trigger)
+        - [Get automation order activity](#get-automation-order-activity)
+        - [Get automation email totals](#get-automation-email-totals)
+        - [Get automation e-commerce totals](#get-automation-e-commerce-totals)
     - [Campaigns](#campaigns)
         - [Get a list of campaigns](#get-a-list-of-campaigns)
         - [Get a campaign](#get-a-campaign)
@@ -643,6 +685,36 @@ func main() {
 }
 ```
 
+### Update a segment name and filter
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.UpdateSegmentOptions{
+		Name: "Segment Name",
+	}
+
+	_, _, err := client.Segment.UpdateWithOptions(ctx, "segment-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
 ### Delete a segment
 
 ```go
@@ -965,6 +1037,1212 @@ func main() {
 	ctx := context.TODO()
 
 	_, err := client.Automation.Delete(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Update an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.UpdateAutomationOptions{
+		Name: "Automation Name",
+	}
+
+	_, _, err := client.Automation.Update(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Copy an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.Copy(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Enable an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.Enable(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Disable an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.Disable(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Send a test of an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.TestAutomationOptions{
+		Email: "test@example.com",
+	}
+
+	_, err := client.Automation.Test(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Add subscribers to an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.AddSubscribersToAutomationOptions{
+		Emails: []string{"test@example.com"},
+	}
+
+	_, err := client.Automation.AddSubscribers(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Re-add subscribers to an automation
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.ReaddAutomationSubscribersOptions{
+		ReaddSubscribersTo: "last_failed_step",
+		Filter: mailerlite.AutomationActivityFilter{
+			Status: "failed",
+		},
+	}
+
+	_, err := client.Automation.Readd(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Copy automation activity subscribers to a group
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.AutomationActivityAddToGroupOptions{
+		DestinationGroups: []string{"group-id"},
+		Filter: mailerlite.AutomationActivityFilter{
+			Status: "completed",
+		},
+	}
+
+	_, err := client.Automation.ActivityAddToGroup(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Cancel active automation runs
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.AutomationActivityOptions{
+		Filter: mailerlite.AutomationActivityFilter{
+			Status: "active",
+		},
+	}
+
+	_, err := client.Automation.ActivityCancelAutomation(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Skip the delay of active automation runs
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.AutomationActivityOptions{
+		Filter: mailerlite.AutomationActivityFilter{
+			Status: "active",
+		},
+	}
+
+	_, err := client.Automation.ActivitySkipDelay(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get a list of automation triggers
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.ListTriggers(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Create an automation trigger
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.CreateAutomationTriggerOptions{
+		Type: mailerlite.AutomationTriggerTypeSubscriberJoinsGroup,
+		Data: map[string]interface{}{
+			"group_ids": []string{"group-id"},
+		},
+	}
+
+	_, _, err := client.Automation.CreateTrigger(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation trigger
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.GetTrigger(ctx, "automation-id", "trigger-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Update an automation trigger
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.UpdateAutomationTriggerOptions{
+		Data: map[string]interface{}{
+			"group_ids": []string{"group-id"},
+		},
+	}
+
+	_, _, err := client.Automation.UpdateTrigger(ctx, "automation-id", "trigger-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Delete an automation trigger
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, err := client.Automation.DeleteTrigger(ctx, "automation-id", "trigger-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get a list of automation steps
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.ListSteps(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Create an automation step
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.CreateAutomationStepOptions{
+		Type:     mailerlite.AutomationStepTypeDelay,
+		ParentID: "parent-step-id",
+		Data: map[string]interface{}{
+			"unit":  "days",
+			"value": 1,
+		},
+	}
+
+	_, _, err := client.Automation.CreateStep(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation step
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.GetStep(ctx, "automation-id", "step-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Update an automation step
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.UpdateAutomationStepOptions{
+		Data: map[string]interface{}{
+			"unit":  "days",
+			"value": 2,
+		},
+	}
+
+	_, _, err := client.Automation.UpdateStep(ctx, "automation-id", "step-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Delete an automation step
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.DeleteAutomationStepOptions{
+		BranchToDelete: mailerlite.AutomationBranchAll,
+	}
+
+	_, err := client.Automation.DeleteStep(ctx, "automation-id", "step-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Copy an automation step
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.CopyAutomationStepOptions{
+		ParentID: "parent-step-id",
+	}
+
+	_, _, err := client.Automation.CopyStep(ctx, "automation-id", "step-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Reorder automation steps
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.ReorderAutomationStepsOptions{
+		DraggedStepID:   "step-id",
+		NewParentStepID: "parent-step-id",
+	}
+
+	_, _, err := client.Automation.ReorderSteps(ctx, "automation-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Select an automation A/B test winner
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.SelectAbTestWinnerOptions{
+		AbTestWinner: mailerlite.AutomationBranchAPath,
+	}
+
+	_, _, err := client.Automation.SelectAbTestWinner(ctx, "automation-id", "step-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation email content
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.GetEmailContent(ctx, "automation-id", "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Update an automation email content
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.UpdateAutomationEmailContentOptions{
+		HTML: "<p>Hello</p>",
+	}
+
+	_, _, err := client.Automation.UpdateEmailContent(ctx, "automation-id", "email-id", options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation email report stats
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.AutomationEmailStatsOptions{
+		AutomationID: "automation-id",
+		EmailID:      "email-id",
+		StartDate:    "2026-01-01",
+		EndDate:      "2026-01-31",
+	}
+
+	_, _, err := client.Automation.EmailReportStats(ctx, options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation email e-commerce stats
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.AutomationEmailStatsOptions{
+		AutomationID: "automation-id",
+		EmailID:      "email-id",
+	}
+
+	_, _, err := client.Automation.EmailEcommerceOverviewStats(ctx, options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation email unsubscribe reasons
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.EmailUnsubscribeReasons(ctx, "automation-id", "email-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get a list of automation templates
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListAutomationTemplateOptions{
+		Filters: &[]mailerlite.Filter{{
+			Name:  "type",
+			Value: "welcome",
+		}},
+		Page:  1,
+		Limit: 10,
+	}
+
+	_, _, err := client.Automation.ListTemplates(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Create an automation from a template
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.SelectTemplate(ctx, "template-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get automation step run counts
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.StepRunCounts(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation step run count
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.StepRunCount(ctx, "automation-id", "step-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get automation trigger run counts
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.TriggerRunCounts(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation trigger run count
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.TriggerRunCount(ctx, "automation-id", "trigger-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get automation A/B test stats
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.AbStepsStats(ctx, "automation-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get an automation A/B test step stats
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	_, _, err := client.Automation.AbStepStats(ctx, "automation-id", "step-id")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get subscribers of an automation step
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListAutomationStepSubscriberOptions{
+		AutomationID: "automation-id",
+		StepID:       "step-id",
+		Status:       "queued",
+		Page:         1,
+		Limit:        10,
+	}
+
+	_, _, err := client.Automation.StepSubscribers(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get subscribers of an automation trigger
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListAutomationTriggerSubscriberOptions{
+		AutomationID: "automation-id",
+		TriggerID:    "trigger-id",
+		Status:       "completed",
+		Page:         1,
+		Limit:        10,
+	}
+
+	_, _, err := client.Automation.TriggerSubscribers(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get automation order activity
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	listOptions := &mailerlite.ListAutomationOrderActivityOptions{
+		AutomationID: "automation-id",
+		TimeFrame:    "month",
+		Page:         1,
+		Limit:        10,
+	}
+
+	_, _, err := client.Automation.OrderActivity(ctx, listOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get automation email totals
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.AutomationStatsOptions{
+		AutomationID: "automation-id",
+	}
+
+	_, _, err := client.Automation.MonthlyEmailTotals(ctx, options)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+```
+
+### Get automation e-commerce totals
+
+```go
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/mailerlite/mailerlite-go"
+)
+
+var APIToken = "Api Token Here"
+
+func main() {
+	client := mailerlite.NewClient(APIToken)
+
+	ctx := context.TODO()
+
+	options := &mailerlite.AutomationStatsOptions{
+		AutomationID: "automation-id",
+	}
+
+	_, _, err := client.Automation.MonthlyEcommerceTotals(ctx, options)
 	if err != nil {
 		log.Fatal(err)
 	}
