@@ -3053,6 +3053,8 @@ func main() {
 
 Without `Placement`, the block goes at the end of the email. `EditorContent` is required. Use an empty map for a block with no content, such as a divider.
 
+If the API removes attributes or `mobile` keys that the block type does not declare, the response has `Rejected` with the keys of the removed values. The API saves the rest of the block.
+
 ```go
 package main
 
@@ -3102,6 +3104,8 @@ func main() {
 ### Update the content of a block
 
 `EditorContent` replaces the whole content of the block. Get the block first, change it, and send all of it back.
+
+If the API removes attributes or `mobile` keys that the block type does not declare, the response has `Rejected` with the keys of the removed values.
 
 ```go
 package main
@@ -3209,6 +3213,8 @@ func main() {
 ### Validate a block
 
 This checks a block against the same rules as an insert, and saves nothing. Invalid content is a successful request, so check `Valid` and `Errors`.
+
+If the content is valid but an insert would remove some keys, the result has `Rejected` with these keys.
 
 ```go
 package main

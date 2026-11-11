@@ -98,6 +98,9 @@ func TestCanGetEmailHTML(t *testing.T) {
 
 const testEmailBlock = `{"data":{"id":"57","type":"paragraph","editor_content":{"content":[{"type":"text","text":"Hello"}]},"placement":{"after":"56","before":null}},"etag":"43"}`
 
+const testEmailBlockRejected = `{"data":{"id":"57","type":"paragraph","editor_content":{"content":[{"type":"text","text":"Hello"}]},"placement":{"after":"56","before":null}},"etag":"43",
+"rejected":{"message":"Some attributes were rejected.","keys":["editor_content.attrs.onclick"]}}`
+
 func TestCanGetEmailBlock(t *testing.T) {
 	client := mailerlite.NewClient(testKey)
 
@@ -121,6 +124,7 @@ func TestCanGetEmailBlock(t *testing.T) {
 	require.NotNil(t, root.Data.Placement)
 	assert.Equal(t, "56", *root.Data.Placement.After)
 	assert.Nil(t, root.Data.Placement.Before)
+	assert.Nil(t, root.Rejected)
 }
 
 func TestCanCreateEmailBlock(t *testing.T) {
@@ -157,6 +161,34 @@ func TestCanCreateEmailBlock(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 	assert.Equal(t, "57", root.Data.ID)
 	assert.Equal(t, "43", root.Etag)
+	assert.Nil(t, root.Rejected)
+}
+
+func TestCreateEmailBlockReturnsRejected(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusCreated,
+			Body:       io.NopCloser(bytes.NewBufferString(testEmailBlockRejected)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type:          mailerlite.EmailBlockTypeParagraph,
+		EditorContent: map[string]interface{}{"attrs": map[string]interface{}{"onclick": "x"}},
+		Etag:          "42",
+	}
+
+	root, _, err := client.Email.CreateBlock(context.TODO(), "123", block)
+	require.NoError(t, err)
+
+	assert.Equal(t, "57", root.Data.ID)
+	require.NotNil(t, root.Rejected)
+	assert.Equal(t, "Some attributes were rejected.", root.Rejected.Message)
+	assert.Equal(t, []string{"editor_content.attrs.onclick"}, root.Rejected.Keys)
 }
 
 func TestCanUpdateEmailBlock(t *testing.T) {
@@ -185,6 +217,32 @@ func TestCanUpdateEmailBlock(t *testing.T) {
 
 	assert.Equal(t, "57", root.Data.ID)
 	assert.Equal(t, "43", root.Etag)
+	assert.Nil(t, root.Rejected)
+}
+
+func TestUpdateEmailBlockReturnsRejected(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(testEmailBlockRejected)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	block := &mailerlite.UpdateEmailBlockOptions{
+		EditorContent: map[string]interface{}{"attrs": map[string]interface{}{"onclick": "x"}},
+		Etag:          "42",
+	}
+
+	root, _, err := client.Email.UpdateBlock(context.TODO(), "123", "57", block)
+	require.NoError(t, err)
+
+	assert.Equal(t, "43", root.Etag)
+	require.NotNil(t, root.Rejected)
+	assert.Equal(t, []string{"editor_content.attrs.onclick"}, root.Rejected.Keys)
 }
 
 func TestCanMoveEmailBlock(t *testing.T) {
@@ -213,6 +271,7 @@ func TestCanMoveEmailBlock(t *testing.T) {
 
 	assert.Equal(t, "57", root.Data.ID)
 	assert.Equal(t, "43", root.Etag)
+	assert.Nil(t, root.Rejected)
 }
 
 func TestCanDeleteEmailBlock(t *testing.T) {
@@ -266,6 +325,32 @@ func TestCanValidateEmailBlock(t *testing.T) {
 	assert.Equal(t, []string{"The value is not allowed."}, result.Errors["editor_content.attrs.textAlign"])
 	assert.Equal(t, "2.73.2", result.Schema.Version)
 	assert.Nil(t, result.Rejected)
+}
+
+func TestValidateEmailBlockReturnsRejected(t *testing.T) {
+	client := mailerlite.NewClient(testKey)
+
+	testClient := NewTestClient(func(req *http.Request) *http.Response {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body: io.NopCloser(bytes.NewBufferString(`{"valid":true,"errors":{},"schema":{"version":"2.73.2","hash":"abc"},
+			"rejected":{"message":"Some attributes were rejected.","keys":["editor_content.attrs.onclick"]}}`)),
+		}
+	})
+
+	client.SetHttpClient(testClient)
+
+	block := &mailerlite.CreateEmailBlockOptions{
+		Type:          mailerlite.EmailBlockTypeParagraph,
+		EditorContent: map[string]interface{}{"attrs": map[string]interface{}{"onclick": "x"}},
+	}
+
+	result, _, err := client.Email.ValidateBlock(context.TODO(), block)
+	require.NoError(t, err)
+
+	assert.True(t, result.Valid)
+	require.NotNil(t, result.Rejected)
+	assert.Equal(t, []string{"editor_content.attrs.onclick"}, result.Rejected.Keys)
 }
 
 func TestCanUpdateEmailSettings(t *testing.T) {
