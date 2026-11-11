@@ -182,10 +182,13 @@ type EmailHTML struct {
 	HTML string `json:"html"`
 }
 
-// RootEmailBlock - single email block response
+// RootEmailBlock - single email block response.
+// Only EmailService.CreateBlock and EmailService.UpdateBlock fill Rejected, when the API removed keys from the block.
+// Rejected is always nil for EmailService.GetBlock and EmailService.MoveBlock.
 type RootEmailBlock struct {
-	Data EmailBlock `json:"data"`
-	Etag string     `json:"etag"`
+	Data     EmailBlock     `json:"data"`
+	Etag     string         `json:"etag"`
+	Rejected *EmailRejected `json:"rejected,omitempty"`
 }
 
 // CreateEmailBlockOptions - modifies the behavior of EmailService.CreateBlock method.
@@ -239,7 +242,11 @@ type EmailSchema struct {
 	Hash    string `json:"hash"`
 }
 
-// EmailRejected - the keys of unsafe values that the API removed or replaced
+// EmailRejected - the keys that the API removed or replaced. The request still succeeds.
+// The block writes (EmailService.CreateBlock and EmailService.UpdateBlock), EmailService.UpdateSettings and the two
+// validate methods (EmailService.ValidateBlock and EmailService.ValidateSettings) can return it.
+// On a block, the API removes the attributes and mobile keys that the block type does not declare.
+// EmailService.ValidateBlock does not return it when Valid is false.
 type EmailRejected struct {
 	Message string   `json:"message"`
 	Keys    []string `json:"keys"`

@@ -2909,6 +2909,8 @@ These endpoints work on emails built with the simple editor. Get the email ID fr
 
 To get a simple editor email, create a campaign with `Editor: mailerlite.EmailEditorSimple`. You can set `Editor` only when you create the campaign. Do not set `Content`. If the email does not use the simple editor, the API returns a `422` error.
 
+`TemplateID` is optional, and works only with `Editor: mailerlite.EmailEditorSimple`. Use a simple editor template from the shared gallery, or a template that you saved from your own email with `client.Email.CreateTemplate`. The API copies the template into the new email. Without `TemplateID`, the email starts from the default blank template. Use the same `Editor` and the same `TemplateID` on every email of the campaign.
+
 Every write must send the `etag` that the last read or write of the email returned. If the etag is empty, the API returns a `422` error. If the email changed after that read or write, the API returns a `409` error with the code `mailerlite.ErrorCodeVersionConflict`. The `Etag` field of the `*mailerlite.ErrorResponse` contains the current etag of the email.
 
 If an email, block or version ID is empty, the SDK returns `mailerlite.ErrEmptyID` and sends no request. If an ID contains a character that is not a digit, the SDK returns `mailerlite.ErrInvalidID` and sends no request.
@@ -3053,6 +3055,8 @@ func main() {
 
 Without `Placement`, the block goes at the end of the email. `EditorContent` is required. Use an empty map for a block with no content, such as a divider.
 
+If the API removes attributes or `mobile` keys that the block type does not declare, the response has `Rejected` with the keys of the removed values. The API saves the rest of the block.
+
 ```go
 package main
 
@@ -3102,6 +3106,8 @@ func main() {
 ### Update the content of a block
 
 `EditorContent` replaces the whole content of the block. Get the block first, change it, and send all of it back.
+
+If the API removes attributes or `mobile` keys that the block type does not declare, the response has `Rejected` with the keys of the removed values.
 
 ```go
 package main
@@ -3209,6 +3215,8 @@ func main() {
 ### Validate a block
 
 This checks a block against the same rules as an insert, and saves nothing. Invalid content is a successful request, so check `Valid` and `Errors`.
+
+If the content is valid but an insert would remove some keys, the result has `Rejected` with these keys.
 
 ```go
 package main
@@ -3326,6 +3334,8 @@ func main() {
 ```
 
 ### Save an email as a template
+
+To start a new campaign from the saved template, convert `template.Data.ID` to an `int` with `strconv.Atoi`, and send it as `TemplateID` when you create the campaign.
 
 ```go
 package main
