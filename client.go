@@ -28,6 +28,9 @@ const (
 	HeaderRateLimit      = "X-RateLimit-Limit"
 	HeaderRateRemaining  = "X-RateLimit-Remaining"
 	HeaderRateRetryAfter = "Retry-After"
+
+	HeaderIdempotencyKey     = "Idempotency-Key"
+	HeaderIdempotentReplayed = "Idempotent-Replayed"
 )
 
 // Client - base api client
@@ -54,6 +57,9 @@ type Client struct {
 	Campaign   CampaignService   // Campaign service
 	Automation AutomationService // Automation service
 	Timezone   TimezoneService   // Timezone service
+	Email      EmailService      // Email service
+	BrandStyle BrandStyleService // Brand style service
+	File       FileService       // File service
 	Ecommerce  *EcommerceService // E-commerce services
 
 }
@@ -75,6 +81,8 @@ type Response struct {
 type ErrorResponse struct {
 	Response *http.Response      // HTTP response that caused this error
 	Message  string              `json:"message"` // error message
+	Code     string              `json:"code"`    // machine-readable error code, if the API sends one
+	Etag     string              `json:"etag"`    // the current etag of the email, sent with ErrorCodeVersionConflict
 	Errors   map[string][]string `json:"errors"`
 }
 
@@ -91,9 +99,14 @@ type Rate struct {
 }
 
 func (r *ErrorResponse) Error() string {
+	message := r.Message
+	if r.Code != "" {
+		message = r.Code + ": " + message
+	}
+
 	return fmt.Sprintf("%v %v: %d %v %+v",
 		r.Response.Request.Method, r.Response.Request.URL,
-		r.Response.StatusCode, r.Message, r.Errors)
+		r.Response.StatusCode, message, r.Errors)
 }
 
 // AuthError occurs when using HTTP Authentication fails
@@ -122,6 +135,9 @@ func NewClient(apiKey string) *Client {
 	client.Campaign = &campaignService{&client.common}
 	client.Automation = &automationService{&client.common}
 	client.Timezone = &timezoneService{&client.common}
+	client.Email = &emailService{&client.common}
+	client.BrandStyle = &brandStyleService{&client.common}
+	client.File = &fileService{&client.common}
 	client.Ecommerce = newEcommerceService(&client.common)
 
 	return client
@@ -153,10 +169,13 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 
 	if method == http.MethodPost ||
 		method == http.MethodPut ||
+		method == http.MethodPatch ||
 		method == http.MethodDelete {
-		err := json.NewEncoder(reqBodyBytes).Encode(body)
-		if err != nil {
-			return nil, err
+		if !isNilBody(body) {
+			err := json.NewEncoder(reqBodyBytes).Encode(body)
+			if err != nil {
+				return nil, err
+			}
 		}
 	} else if method == http.MethodGet {
 		reqURL, _ = addOptions(reqURL, body)
@@ -182,6 +201,8 @@ func (c *Client) newRequest(method, path string, body interface{}) (*http.Reques
 
 func (c *Client) do(ctx context.Context, req *http.Request, v interface{}) (*Response, error) {
 	req = req.WithContext(ctx)
+
+	setIdempotencyKey(req)
 
 	// If we've hit rate limit, don't make further requests before Reset time.
 	if err := c.checkRateLimitBeforeDo(req); err != nil {
@@ -284,9 +305,25 @@ func checkResponse(r *http.Response) error {
 			Rate:     parseRate(r),
 			Response: errorResponse.Response,
 			Message:  errorResponse.Message,
+			Code:     errorResponse.Code,
 		}
 	default:
 		return errorResponse
+	}
+}
+
+// JSON encodes a nil pointer, map or slice as null, so these values are also no body.
+func isNilBody(body interface{}) bool {
+	if body == nil {
+		return true
+	}
+
+	v := reflect.ValueOf(body)
+	switch v.Kind() {
+	case reflect.Ptr, reflect.Map, reflect.Slice:
+		return v.IsNil()
+	default:
+		return false
 	}
 }
 
@@ -311,21 +348,22 @@ func addOptions(s string, opt interface{}) (string, error) {
 
 	for k, v := range newValues {
 		if k == "Filters" {
-			for _, fv := range v {
-				if fv == "" {
-					continue
-				}
-				split := strings.Fields(strings.Trim(fv, "{}"))
-				filterKey := fmt.Sprintf("filter[%s]", split[0])
-				origValues.Add(filterKey, split[1])
-			}
 			continue
-		} else {
-			for _, fv := range v {
-				if fv == "" {
-					continue
+		}
+		for _, fv := range v {
+			if fv == "" {
+				continue
+			}
+			origValues.Add(k, fv)
+		}
+	}
+
+	if s := reflect.Indirect(v); s.Kind() == reflect.Struct {
+		if f := s.FieldByName("Filters"); f.IsValid() {
+			if filters, ok := f.Interface().(*[]Filter); ok && filters != nil {
+				for _, filter := range *filters {
+					origValues.Add(fmt.Sprintf("filter[%s]", filter.Name), fmt.Sprint(filter.Value))
 				}
-				origValues.Add(k, fv)
 			}
 		}
 	}
@@ -361,6 +399,7 @@ type RateLimitError struct {
 	Rate     Rate           // Rate specifies last known rate limit for the client
 	Response *http.Response // HTTP response that caused this error
 	Message  string         `json:"message"` // error message
+	Code     string         `json:"code"`    // machine-readable error code, if the API sends one
 }
 
 func (r *RateLimitError) Error() string {

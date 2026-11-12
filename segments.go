@@ -12,6 +12,7 @@ const segmentEndpoint = "/segments"
 type SegmentService interface {
 	List(ctx context.Context, options *ListSegmentOptions) (*RootSegments, *Response, error)
 	Update(ctx context.Context, segmentID, segmentName string) (*RootSegment, *Response, error)
+	UpdateWithOptions(ctx context.Context, segmentID string, options *UpdateSegmentOptions) (*RootSegment, *Response, error)
 	Delete(ctx context.Context, segmentID string) (*Response, error)
 	Subscribers(ctx context.Context, options *ListSegmentSubscriberOptions) (*RootSubscribers, *Response, error)
 }
@@ -42,8 +43,15 @@ type Segment struct {
 
 // ListSegmentOptions - modifies the behavior of SegmentService.List method
 type ListSegmentOptions struct {
-	Page  int `url:"page,omitempty"`
-	Limit int `url:"limit,omitempty"`
+	Page  int    `url:"page,omitempty"`
+	Limit int    `url:"limit,omitempty"`
+	Sort  string `url:"sort,omitempty"`
+}
+
+// UpdateSegmentOptions - modifies the behavior of SegmentService.UpdateWithOptions method
+type UpdateSegmentOptions struct {
+	Name   string        `json:"name,omitempty"`
+	Filter []interface{} `json:"filter,omitempty"`
 }
 
 // ListSegmentSubscriberOptions - modifies the behavior of SegmentService.Subscribers method
@@ -52,6 +60,7 @@ type ListSegmentSubscriberOptions struct {
 	Filters   *[]Filter `json:"filters,omitempty"`
 	Limit     int       `url:"limit,omitempty"`
 	After     int       `url:"after,omitempty"`
+	Cursor    string    `url:"cursor,omitempty"`
 }
 
 func (s *segmentService) List(ctx context.Context, options *ListSegmentOptions) (*RootSegments, *Response, error) {
@@ -70,10 +79,13 @@ func (s *segmentService) List(ctx context.Context, options *ListSegmentOptions) 
 }
 
 func (s *segmentService) Update(ctx context.Context, segmentID, segmentName string) (*RootSegment, *Response, error) {
-	body := map[string]interface{}{"name": segmentName}
+	return s.UpdateWithOptions(ctx, segmentID, &UpdateSegmentOptions{Name: segmentName})
+}
+
+func (s *segmentService) UpdateWithOptions(ctx context.Context, segmentID string, options *UpdateSegmentOptions) (*RootSegment, *Response, error) {
 	path := fmt.Sprintf("%s/%s", segmentEndpoint, segmentID)
 
-	req, err := s.client.newRequest(http.MethodPut, path, body)
+	req, err := s.client.newRequest(http.MethodPut, path, options)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -64,19 +64,25 @@ type ListGroupSubscriberOptions struct {
 	Filters *[]Filter `json:"filters,omitempty"`
 	Page    int       `url:"page,omitempty"`
 	Limit   int       `url:"limit,omitempty"`
+	Cursor  string    `url:"cursor,omitempty"`
+	Include string    `url:"include,omitempty"`
 }
 
 type ImportSubscribersOptions struct {
-	Subscribers []ImportSubscriber `json:"subscribers"`
+	Subscribers        []ImportSubscriber `json:"subscribers"`
+	Resubscribe        bool               `json:"resubscribe,omitempty"`
+	TriggerAutomations *bool              `json:"trigger_automations,omitempty"`
 }
 
 type ImportSubscriber struct {
 	Email  string                 `json:"email"`
+	Name   string                 `json:"name,omitempty"`
 	Fields map[string]interface{} `json:"fields,omitempty"`
 }
 
 type RootImportSubscribers struct {
 	ImportProgressURL string `json:"import_progress_url"`
+	Data              Import `json:"data"`
 }
 
 func (s *groupService) List(ctx context.Context, options *ListGroupOptions) (*RootGroups, *Response, error) {
