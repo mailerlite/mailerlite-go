@@ -196,12 +196,6 @@ type RootEcommerceReportOrders struct {
 	Meta  Meta                   `json:"meta"`
 }
 
-type RootAutomationEcommerceOrders struct {
-	Data  []map[string]interface{} `json:"data"`
-	Links Links                    `json:"links"`
-	Meta  Meta                     `json:"meta"`
-}
-
 // Amount is a money value the API may send as a JSON number or a numeric string.
 type Amount float64
 
@@ -376,23 +370,6 @@ type EcommerceReportOptions struct {
 	ShopID string `url:"shop_id"`
 	Page   int    `url:"page,omitempty"`
 	Limit  int    `url:"limit,omitempty"`
-}
-
-// AutomationEcommerceOptions - modifies the behavior of the automation e-commerce stats
-type AutomationEcommerceOptions struct {
-	ShopID    string `url:"shop_id,omitempty"`
-	StartDate string `url:"start_date,omitempty"`
-	EndDate   string `url:"end_date,omitempty"`
-}
-
-// AutomationEcommerceOrderOptions - modifies the behavior of AutomationService.EcommerceOrders method
-type AutomationEcommerceOrderOptions struct {
-	TimeFrame       string `url:"time_frame"`
-	TimeFrameStart  string `url:"time_frame_start,omitempty"`
-	TimeFrameEnd    string `url:"time_frame_end,omitempty"`
-	EcommerceShopID string `url:"ecommerce_shop_id,omitempty"`
-	Page            int    `url:"page,omitempty"`
-	Limit           int    `url:"limit,omitempty"`
 }
 
 type ShopStatsOptions struct {

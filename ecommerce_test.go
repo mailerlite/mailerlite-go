@@ -202,18 +202,6 @@ func TestEcommerceRequests(t *testing.T) {
 			_, _, err := c.Subscriber.EcommerceOrders(ctx, "6", &mailerlite.EcommerceReportOptions{ShopID: "1"})
 			return err
 		}, http.MethodGet, "https://connect.mailerlite.com/api/subscribers/6/reports/ecommerce/orders?shop_id=1", ""},
-		{"automation ecommerce stats", func(c *mailerlite.Client) error {
-			_, _, err := c.Automation.EcommerceStats(ctx, "8", nil)
-			return err
-		}, http.MethodGet, "https://connect.mailerlite.com/api/automations/8/monthly-totals/ecommerce", ""},
-		{"automation email ecommerce stats", func(c *mailerlite.Client) error {
-			_, _, err := c.Automation.EmailEcommerceStats(ctx, "8", "9", &mailerlite.AutomationEcommerceOptions{ShopID: "1"})
-			return err
-		}, http.MethodGet, "https://connect.mailerlite.com/api/automations/8/emails/9/ecommerce-overview-stats?shop_id=1", ""},
-		{"automation ecommerce orders", func(c *mailerlite.Client) error {
-			_, _, err := c.Automation.EcommerceOrders(ctx, "8", &mailerlite.AutomationEcommerceOrderOptions{TimeFrame: "all_time"})
-			return err
-		}, http.MethodGet, "https://connect.mailerlite.com/api/automations/8/order-activity?time_frame=all_time", ""},
 	}
 
 	for _, tc := range cases {

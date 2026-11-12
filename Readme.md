@@ -3701,10 +3701,6 @@ orders, _, err := client.Campaign.EcommerceOrders(ctx, "campaign-id", &mailerlit
 stats, _, err := client.Subscriber.EcommerceStats(ctx, "subscriber-id", &mailerlite.EcommerceReportOptions{ShopID: "shop-id"})
 orders, _, err := client.Subscriber.EcommerceOrders(ctx, "subscriber-id", &mailerlite.EcommerceReportOptions{ShopID: "shop-id"})
 
-stats, _, err := client.Automation.EcommerceStats(ctx, "automation-id", nil)
-stats, _, err := client.Automation.EmailEcommerceStats(ctx, "automation-id", "email-id", nil)
-orders, _, err := client.Automation.EcommerceOrders(ctx, "automation-id", &mailerlite.AutomationEcommerceOrderOptions{TimeFrame: "all_time"})
-
 settings, _, err := client.Ecommerce.Setting.Get(ctx)
 ```
 

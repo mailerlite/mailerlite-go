@@ -100,9 +100,6 @@ type AutomationService interface {
 	OrderActivity(ctx context.Context, options *ListAutomationOrderActivityOptions) (*RootAutomationOrderActivity, *Response, error)
 	MonthlyEmailTotals(ctx context.Context, options *AutomationStatsOptions) (*RootAutomationEmailStats, *Response, error)
 	MonthlyEcommerceTotals(ctx context.Context, options *AutomationStatsOptions) (*RootAutomationEcommerceTotals, *Response, error)
-	EcommerceStats(ctx context.Context, automationID string, options *AutomationEcommerceOptions) (*RootEcommerceReport, *Response, error)
-	EmailEcommerceStats(ctx context.Context, automationID, emailID string, options *AutomationEcommerceOptions) (*RootEcommerceReport, *Response, error)
-	EcommerceOrders(ctx context.Context, automationID string, options *AutomationEcommerceOrderOptions) (*RootAutomationEcommerceOrders, *Response, error)
 }
 
 type automationService struct {
@@ -1476,37 +1473,4 @@ func (s *automationService) MonthlyEcommerceTotals(ctx context.Context, options 
 
 func automationPath(automationID string, parts ...string) string {
 	return strings.Join(append([]string{automationEndpoint, automationID}, parts...), "/")
-}
-
-func (s *automationService) EcommerceStats(ctx context.Context, automationID string, options *AutomationEcommerceOptions) (*RootEcommerceReport, *Response, error) {
-	path := fmt.Sprintf("%s/%s/monthly-totals/ecommerce", automationEndpoint, automationID)
-	root := new(RootEcommerceReport)
-	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
-	if err != nil {
-		return nil, res, err
-	}
-
-	return root, res, nil
-}
-
-func (s *automationService) EmailEcommerceStats(ctx context.Context, automationID, emailID string, options *AutomationEcommerceOptions) (*RootEcommerceReport, *Response, error) {
-	path := fmt.Sprintf("%s/%s/emails/%s/ecommerce-overview-stats", automationEndpoint, automationID, emailID)
-	root := new(RootEcommerceReport)
-	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
-	if err != nil {
-		return nil, res, err
-	}
-
-	return root, res, nil
-}
-
-func (s *automationService) EcommerceOrders(ctx context.Context, automationID string, options *AutomationEcommerceOrderOptions) (*RootAutomationEcommerceOrders, *Response, error) {
-	path := fmt.Sprintf("%s/%s/order-activity", automationEndpoint, automationID)
-	root := new(RootAutomationEcommerceOrders)
-	res, err := send(ctx, s.service, http.MethodGet, path, options, root)
-	if err != nil {
-		return nil, res, err
-	}
-
-	return root, res, nil
 }
