@@ -60,6 +60,7 @@ type Client struct {
 	Email      EmailService      // Email service
 	BrandStyle BrandStyleService // Brand style service
 	File       FileService       // File service
+	Ecommerce  *EcommerceService // E-commerce services
 
 }
 
@@ -137,6 +138,7 @@ func NewClient(apiKey string) *Client {
 	client.Email = &emailService{&client.common}
 	client.BrandStyle = &brandStyleService{&client.common}
 	client.File = &fileService{&client.common}
+	client.Ecommerce = newEcommerceService(&client.common)
 
 	return client
 }
